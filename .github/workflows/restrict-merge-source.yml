@@ -1,0 +1,20 @@
+name: Restrict merge source
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-source-branch:
+    name: Source branch must be development
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify source branch is development
+        run: |
+          if [ "${{ github.head_ref }}" != "development" ]; then
+            echo "ERROR: Pull requests to main are only allowed from the 'development' branch."
+            echo "Source branch: ${{ github.head_ref }}"
+            exit 1
+          fi
+          echo "OK: Source branch is 'development'."
