@@ -2,7 +2,7 @@
 
 Companion to [AGENTS.md](AGENTS.md). AGENTS.md covers *what we're building and why*; this doc covers the target structure for growing the project without letting layer boundaries blur.
 
-**Stack:** React 18 + TypeScript + Vite (frontend) · Electron (desktop) · Python/FastAPI (backend, planned) · React Router v6 · CSS-in-TSX inline styles · Bungie API (Destiny 2 player data retrieval and game data search)
+**Stack:** React 18 + TypeScript + Vite (frontend) · Electron (desktop) · Python/FastAPI (backend) · React Router v6 · CSS-in-TSX inline styles · Bungie API (Destiny 2 player data retrieval and game data search)
 
 ---
 
@@ -138,17 +138,53 @@ The React app has zero Electron-specific imports. Platform detection (`window.el
 
 ---
 
-## Backend API (Planned — FastAPI)
+## Backend (FastAPI — `backend/`)
+
+```text
+backend/
+  app/
+    main.py              ← FastAPI app, CORS, router registration
+    config.py            ← Settings loaded from .env (BUNGIE_API_KEY, MANIFEST_DB_PATH, CORS_ORIGINS)
+    routers/
+      player.py          ← GET /api/player/search?name={name}
+      character.py       ← GET /api/character/{membershipId}/{characterId}
+      pvp.py             ← GET /api/pvp/{membershipId}/{characterId}?mode={mode}
+      raid.py            ← GET /api/raid/{membershipId}/{characterId}?mode={mode}
+      manifest.py        ← GET /api/manifest/activity/{hash}, /api/manifest/item/{hash}
+    services/
+      bungie.py          ← Shared httpx.AsyncClient; single get() helper
+      manifest.py        ← SQLite lookups via asyncio.to_thread; hash → signed-id conversion
+    models/
+      player.py          ← Pydantic: PlayerProfile, Character, CharacterDetail, GearItem, ClanInfo
+      pvp.py             ← Pydantic: PvpActivity
+      raid.py            ← Pydantic: RaidActivity
+    db/
+      manifest.db        ← Bungie manifest SQLite (gitignored; run update_manifest.py first)
+  scripts/
+    update_manifest.py   ← Downloads latest manifest from Bungie; prefers zh-chs, falls back to en
+  requirements.txt
+  .env.example
+```
 
 The frontend calls these endpoints. Services in `src/data/services/` map 1-to-1:
 
-| Method | Path | Service function |
-|---|---|---|
-| `GET` | `/api/player/search?name={name}` | `searchPlayer` |
-| `GET` | `/api/character/{membershipId}/{characterId}` | `loadCharacterDetail` |
-| `GET` | `/api/pvp/{membershipId}/{characterId}?mode={mode}` | `loadPvpActivities` |
+| Method | Path | Service function | Replaces |
+|---|---|---|---|
+| `GET` | `/api/player/search?name={name}` | `searchPlayer` | `search/getInfo.php` |
+| `GET` | `/api/character/{membershipId}/{characterId}` | `loadCharacterDetail` | `search/getName.php` + `db/getName.php` |
+| `GET` | `/api/pvp/{membershipId}/{characterId}?mode={mode}` | `loadPvpActivities` | `db/pvp.php` |
+| `GET` | `/api/raid/{membershipId}/{characterId}?mode={mode}` | `loadRaidActivities` | `search/botRaidKf.php` |
+| `GET` | `/api/manifest/activity/{hash}` | — | `db/pvp.php` inline SQL |
+| `GET` | `/api/manifest/item/{hash}` | — | `db/getName.php` inline SQL |
 
 All responses match the TypeScript interfaces in `src/domain/types/`. The `api.ts` config wrapper reads `VITE_API_BASE_URL` and throws a typed error on non-2xx responses.
+
+### Backend conventions
+
+- `membershipType` defaults to `3` (Steam/PC) on character, PvP, and raid endpoints. Pass `?membershipType=N` to override.
+- Gear items are returned in slot order: kinetic → energy → power → helmet → gauntlets → chest → legs → class. `GearGrid` relies on `slice(0,3)` / `slice(3,8)` matching this order.
+- `emblemBackgroundPath`, `bannerPath`, and `iconPath` are returned as bare Bungie paths (e.g. `/common/…`). The frontend prepends `https://www.bungie.net`.
+- Manifest hash → SQLite id conversion: if the high bit of the unsigned 32-bit hash is set, subtract 2³². This matches the `getid()` function from the legacy PHP.
 
 ---
 
