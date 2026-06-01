@@ -16,11 +16,10 @@ The backend is a separate Python/FastAPI process (`backend/`). The frontend talk
 
 If older documentation, skills, or comments conflict with what is described here, treat that as stale context and update it before relying on it.
 
-Legacy PHP files (`search/`, `db/`) and the original HTML pages (`index.html`, `character/`, `pvp/`, `raid/`) remain in the repo as reference only. They are **not** part of the active build.
+The original HTML pages (`index.html`, `character/`, `pvp/`, `raid/`) remain in the repo as reference only. They are **not** part of the active build.
 
 | Path | What it is |
 |---|---|
-| `search/`, `db/` | Legacy PHP backend. Reference only; not called by the React frontend. |
 | `character/`, `pvp/`, `raid/` | Legacy HTML pages. Reference only. |
 
 ---
@@ -57,7 +56,9 @@ Legacy PHP files (`search/`, `db/`) and the original HTML pages (`index.html`, `
 - `npm run electron:dev` — Vite + Electron desktop window (dev mode)
 - `npm run electron:build` — package Electron app to `release/`
 
-**Backend (from `backend/`, not yet built):**
+**Backend (from `backend/`):**
+- Copy `.env.example` to `.env` and set `BUNGIE_API_KEY`
+- `python scripts/update_manifest.py` — download latest Destiny manifest to `app/db/manifest.db`
 - `uvicorn app.main:app --reload` — FastAPI dev server at `localhost:8000`
 
 **Static assets** — copy before first run:
