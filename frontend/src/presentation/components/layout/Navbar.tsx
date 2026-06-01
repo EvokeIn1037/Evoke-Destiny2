@@ -7,6 +7,8 @@ const NAV_ITEMS = [
   { label: '主页', route: ROUTES.HOME },
   { label: '个人数据', route: ROUTES.CHARACTER },
   { label: 'pvp查询', route: ROUTES.PVP },
+  { label: '突袭查询', route: ROUTES.RAID },
+  { label: 'hash查询', route: ROUTES.HASH },
 ] as const;
 
 export default function Navbar() {

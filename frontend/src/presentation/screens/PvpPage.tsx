@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react';
+import bungieLoadGif from '@/presentation/assets/img/bungieload.gif';
 import { usePlayer } from '@/data/providers/player.provider';
 import { usePvp } from '@/data/providers/pvp.provider';
 import Navbar from '@/presentation/components/layout/Navbar';
@@ -35,7 +36,7 @@ export default function PvpPage() {
         {playerStatus === 'loading' && (
           <div style={styles.loadingWrapper}>
             <p style={styles.loadingText}>加载中...</p>
-            <img src="./img/bungieload.gif" width={160} alt="loading" />
+            <img src={bungieLoadGif} width={160} alt="loading" />
           </div>
         )}
         {playerStatus === 'error' && (
@@ -58,7 +59,7 @@ export default function PvpPage() {
                   />
                   {pvpState?.status === 'loading' && (
                     <div style={styles.loadingWrapper}>
-                      <img src="./img/bungieload.gif" width={80} alt="loading" />
+                      <img src={bungieLoadGif} width={80} alt="loading" />
                     </div>
                   )}
                   {pvpState?.status === 'error' && (

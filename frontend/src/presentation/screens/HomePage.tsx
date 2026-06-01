@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import finalShapeVideo from '@/presentation/assets/video/The_Final_Shape.mp4';
 import Navbar from '@/presentation/components/layout/Navbar';
 import Footer from '@/presentation/components/layout/Footer';
 import { colors, spacing, fontSizes, font } from '@/presentation/styles/tokens';
@@ -12,9 +13,8 @@ export default function HomePage() {
         <p style={styles.subtitle}>应该会有各种个人数据、武器数据查询吧~</p>
       </div>
       <div style={styles.videoWrapper}>
-        {/* Place The_Final_Shape.mp4 in frontend/public/video/ */}
         <video
-          src="./video/The_Final_Shape.mp4"
+          src={finalShapeVideo}
           style={styles.video}
           autoPlay
           muted

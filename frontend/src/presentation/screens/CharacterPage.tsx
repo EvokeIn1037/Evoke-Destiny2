@@ -1,6 +1,7 @@
 import { useEffect, type CSSProperties } from 'react';
 import { usePlayer } from '@/data/providers/player.provider';
 import { useCharacter } from '@/data/providers/character.provider';
+import bungieLoadGif from '@/presentation/assets/img/bungieload.gif';
 import Navbar from '@/presentation/components/layout/Navbar';
 import Footer from '@/presentation/components/layout/Footer';
 import SearchBar from '@/presentation/components/player/SearchBar';
@@ -35,7 +36,7 @@ export default function CharacterPage() {
         {playerStatus === 'loading' && (
           <div style={styles.loadingWrapper}>
             <p style={styles.loadingText}>加载中...</p>
-            <img src="./img/bungieload.gif" width={160} alt="loading" />
+            <img src={bungieLoadGif} width={160} alt="loading" />
           </div>
         )}
         {playerStatus === 'error' && (
@@ -50,7 +51,7 @@ export default function CharacterPage() {
                   <CharacterCard character={character} />
                   {charState.status === 'loading' && (
                     <div style={styles.loadingWrapper}>
-                      <img src="./img/bungieload.gif" width={80} alt="loading" />
+                      <img src={bungieLoadGif} width={80} alt="loading" />
                     </div>
                   )}
                   {charState.status === 'success' && charState.detail && (
