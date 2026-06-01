@@ -2,13 +2,13 @@
 
 Companion to [AGENTS.md](AGENTS.md). AGENTS.md covers *what we're building and why*; this doc covers the target structure for growing the project without letting layer boundaries blur.
 
-**Stack:** _(fill in your stack — e.g. Expo + React Native + TypeScript + React Native Web + Auth + Cloud/API services)_
+**Stack:** React 18 + TypeScript + Vite (frontend) · Electron (desktop) · Python/FastAPI (backend, planned) · React Router v6 · CSS-in-TSX inline styles · Bungie API (Destiny 2 player data retrieval and game data search)
 
 ---
 
 ## Architecture Goal
 
-The project has a layered foundation: `src/data`, `src/presentation`, `src/shared`, and a consistent path alias. The build blueprint is to keep that foundation, tighten the layer boundaries, and introduce a small `app/` and intentional `domain/` layer before the project grows further.
+The frontend has a layered foundation: `src/data`, `src/presentation`, `src/shared`, and a consistent `@/` path alias. The build blueprint is to keep that foundation, tighten the layer boundaries, and introduce a small `app/` and intentional `domain/` layer before the project grows further.
 
 Target dependency direction:
 
@@ -22,208 +22,160 @@ app
 
 More precisely:
 
-- `app` composes providers, routing, auth bootstrapping, and app-wide lifecycle.
+- `app` composes providers, routing, and app-wide lifecycle.
 - `presentation` can depend on `data`, `domain`, and `shared`.
 - `data` can depend on `domain` and `shared`.
 - `domain` can depend on `shared` only when the dependency is truly generic.
-- `shared` should not depend on `presentation` or `data`.
+- `shared` must not depend on `presentation` or `data`.
 
 If a lower layer imports from a higher layer, move the shared type, constant, or helper down into `domain` or `shared`.
 
 ---
 
-## Target Source Layout
+## Source Layout
 
 ```text
-src/
-  app/
-    AppProviders.tsx
-    AppRouter.tsx
-    navigation/
-      routes.ts
-      deepLinking.ts
-  domain/
-    models/
-    constants/
-    types/
-  data/
-    config/
-    graphql/
-      queries/
-      mutations/
-      subscriptions/
-    mappers/
-    services/
-    repositories/
-    models/
-  presentation/
-    assets/
-    components/
-    contexts/
-    hooks/
-    screens/
-    styles/
-    types/
-  shared/
-    hooks/
-    types/
-    utils/
+frontend/
+  electron/
+    main.ts              ← Electron main process; loads localhost:5173 in dev, dist/index.html in prod
+    preload.ts           ← Context bridge; exposes platform + isElectron to renderer
+  src/
+    app/
+      App.tsx            ← Thin boot entry: mounts AppProviders + AppRouter
+      AppProviders.tsx   ← Composes PlayerProvider, CharacterProvider, PvpProvider
+      AppRouter.tsx      ← HashRouter + route→screen mapping
+      navigation/
+        routes.ts        ← ROUTES constants (/, /character, /pvp)
+    domain/
+      types/
+        player.ts        ← PlayerProfile, Character, CharacterDetail, GearItem, ClanInfo, CharacterStats
+        pvp.ts           ← PvpActivity
+      constants/
+        pvpModes.ts      ← PVP_MODES array + PVP_MODE_MAP (mode id → Chinese label)
+    data/
+      config/
+        api.ts           ← fetch wrapper reading VITE_API_BASE_URL
+      services/
+        playerService.ts    ← searchPlayer(name) → PlayerProfile
+        characterService.ts ← loadCharacterDetail(membershipId, characterId) → CharacterDetail
+        pvpService.ts       ← loadPvpActivities(membershipId, characterId, mode) → PvpActivity[]
+      providers/
+        player.type.ts      ← PlayerState + PlayerContextValue interface
+        player.provider.tsx ← PlayerContext + useReducer + usePlayer() hook
+        character.type.ts   ← CharacterDetailState + CharacterContextValue interface
+        character.provider.tsx ← CharacterContext + per-characterId state map + useCharacter() hook
+        pvp.type.ts         ← PvpDataState + PvpContextValue interface
+        pvp.provider.tsx    ← PvpContext + keyed by `${characterId}:${mode}` + usePvp() hook
+    presentation/
+      screens/
+        HomePage.tsx       ← Video background + hero text
+        CharacterPage.tsx  ← Search → per-character stats + gear + clan info
+        PvpPage.tsx        ← Search → per-character mode selector → activity table
+      components/
+        layout/
+          Navbar.tsx       ← Sticky nav; active route highlighted in primary gold
+          Footer.tsx       ← ~Presented by evoke~
+        player/
+          SearchBar.tsx    ← Controlled input + submit; reused on both data pages
+          CharacterCard.tsx← Emblem image + class name overlay + light level
+          StatTable.tsx    ← Class/race/gender, last login, playtime, light, 6 stats
+          GearGrid.tsx     ← 3 weapons + 5 armor slots; icon + name + light per slot
+          ClanInfo.tsx     ← Banner image + name/callsign + member count + motto + about
+        pvp/
+          ModeSelector.tsx ← 12 mode buttons; active mode highlighted in primary gold
+          ActivityTable.tsx← Scrollable table: map, K, D, A, KD, KDA, efficiency
+      styles/
+        tokens.ts          ← colors, spacing, fontSizes, font, radii, shared style objects
+    shared/
+      hooks/
+        useAsync.ts        ← Generic status/data/error state + run(promise) helper
+      utils/
+        bungieName.ts      ← encodeBungieName (# → %23), splitBungieName
+    main.tsx               ← ReactDOM.createRoot entry point
+    vite-env.d.ts          ← VITE_API_BASE_URL env type
+  index.html
+  vite.config.ts           ← @/ alias; electron plugin activated when --mode electron
+  tsconfig.json            ← React source (src/)
+  tsconfig.node.json       ← Vite config + electron/ (Node types)
+  package.json
+  electron-builder.json    ← Electron packaging (dmg/nsis/AppImage)
+  .env.example             ← VITE_API_BASE_URL=http://localhost:8000
 ```
 
-This is an ideal blueprint, not a demand for a large rewrite. Move code toward this shape when touching nearby files.
+---
+
+## Provider Pattern
+
+Each data domain gets exactly two files:
+
+- `*.type.ts` — the context's TypeScript interface (state shape + action signatures). No React imports.
+- `*.provider.tsx` — `createContext` + `useReducer` state machine + exported hook (`usePlayer`, `useCharacter`, `usePvp`).
+
+State machines use discriminated union `Action` types. Reducers are idempotent: a `LOAD_START` for an already-loading entry is a no-op at the reducer level.
+
+Providers live at the app level (`AppProviders.tsx`). Screens consume data via hooks, never by importing context directly.
 
 ---
 
-## App Layer
+## CSS Convention
 
-`App.tsx` should become a thin boot entry. It should register the top-level shell and delegate the real work:
+All styles are declared as `const styles: Record<string, CSSProperties>` at the bottom of each `.tsx` file. Shared design values (colors, spacing, font sizes, border radii, common button/input objects) live in `src/presentation/styles/tokens.ts` and are imported directly.
 
-- `src/app/AppProviders.tsx` composes global providers such as auth state, feature flags, and any app-wide context.
-- `src/app/AppRouter.tsx` owns active-route state, route-to-screen rendering, and navigation callbacks.
-- `src/app/navigation/` owns route types, route helpers, and deep-link mapping.
-
-Avoid letting `App.tsx` accumulate auth validation, deep-link handling, route state, provider composition, and manual screen rendering all at once. New navigation work should move toward the app layer instead of adding more weight to `App.tsx`.
-
-A standard router library (e.g. React Navigation, Expo Router) is a reasonable option if flows become complex enough to justify it. Until then, keep any custom router isolated behind the app layer boundary.
+No external `.css` files. No CSS modules. No Tailwind. No styled-components.
 
 ---
 
-## Domain Layer
+## Platform Split (Web vs Electron)
 
-`src/domain` should hold business-facing concepts that are not UI-specific and not API-specific:
+| Concern | Web | Electron |
+|---|---|---|
+| Router | `HashRouter` (works with `file://` and HTTP) | Same |
+| Dev entry | `vite --mode development` | `vite --mode electron` (adds electron plugin) |
+| Prod load | Static HTTP server → `dist/index.html` | `win.loadFile('../dist/index.html')` |
+| Native APIs | None | `electron/preload.ts` exposes `platform` via contextBridge |
 
-- Core domain models for the product's main entities.
-- Enums and constants used by more than one layer.
-- Use-case-level types that services return and screens consume.
-
-Use `domain` to fix leaky imports. For example, data services should not import `src/presentation/types`, and shared helpers should not import presentation constants. When a type is needed by both a service and a screen, it belongs in `domain` or `shared/types`.
-
-Avoid empty architecture folders. If `domain/models`, `domain/constants`, or `domain/types` exist, they should contain real cross-layer contracts. Otherwise, remove placeholders until they are needed.
-
----
-
-## Data Layer
-
-`src/data` is the integration layer for external APIs and device-backed capabilities.
-
-Responsibilities:
-
-- Own endpoint details, auth token usage, GraphQL or REST queries/mutations/subscriptions, request bodies, response mapping, and error normalization.
-- Hide API payload shapes behind app/domain-shaped service methods.
-- Keep native APIs behind service boundaries with web-safe fallbacks where applicable.
-- Keep mapping logic in `mappers/` and service payload models in `models/`.
-- Add `repositories/` when a feature needs caching, composition across multiple services, or a stable domain-facing API over several backend calls.
-
-Example service areas to fill in:
-
-| Area | Files |
-|---|---|
-| Auth | _(e.g. `AuthService`, `AuthStorage`, `AuthStorage.web`)_ |
-| Cloud / realtime | _(e.g. `ApiService`, GraphQL files)_ |
-| Feature A | _(e.g. `FeatureAService`)_ |
-| Feature B | _(e.g. `FeatureBService`)_ |
-| Device / native | _(e.g. `DeviceService`, `DeviceService.web`)_ |
-
-Data code should not import presentation components, presentation constants, or presentation types.
+The React app has zero Electron-specific imports. Platform detection (`window.electronAPI`) is available if needed but the current codebase does not require it.
 
 ---
 
-## Presentation Layer
+## Backend API (Planned — FastAPI)
 
-`src/presentation` owns UI and interaction:
+The frontend calls these endpoints. Services in `src/data/services/` map 1-to-1:
 
-- `screens/` contains route-level screens and feature flows.
-- `components/` contains reusable UI and feature-scoped components.
-- `contexts/` exposes UI/app state to screen trees.
-- `hooks/` contains UI and device hooks.
-- `types/` contains presentation-only contracts such as tab definitions, screen props, and UI state.
-- `styles/` contains UI labels, layout values, and style tokens.
+| Method | Path | Service function |
+|---|---|---|
+| `GET` | `/api/player/search?name={name}` | `searchPlayer` |
+| `GET` | `/api/character/{membershipId}/{characterId}` | `loadCharacterDetail` |
+| `GET` | `/api/pvp/{membershipId}/{characterId}?mode={mode}` | `loadPvpActivities` |
 
-Large screens and viewers should be split by responsibility:
-
-- Stateful orchestration moves into feature hooks.
-- Data loading moves into services, repositories, or feature hooks.
-- Rendering components stay focused on layout and display.
-- Heavy transformation or mapping logic moves out of screen files.
-
----
-
-## Shared Layer
-
-`src/shared` is for utilities and types that are generic across product areas:
-
-- Generic hooks.
-- Generic TypeScript helpers and utility functions.
-- Cross-cutting types that do not encode UI or backend details.
-
-`shared` must stay presentation-agnostic and data-agnostic. If a helper needs UI constants, it probably belongs in `presentation/utils`. If it needs API models, it probably belongs in `data/helpers` or `data/mappers`.
-
----
-
-## Platform Boundaries
-
-Rules for projects targeting multiple platforms (e.g. iOS, Android, web):
-
-- Use `.web.ts` / `.web.tsx` files when web behavior differs from native.
-- Keep platform-specific APIs inside services or hooks.
-- Do not import native modules directly in screens when a service or hook can hide the platform difference.
-- Keep web verification paths working even when native-only behavior needs separate simulator/device verification.
+All responses match the TypeScript interfaces in `src/domain/types/`. The `api.ts` config wrapper reads `VITE_API_BASE_URL` and throws a typed error on non-2xx responses.
 
 ---
 
 ## Navigation Blueprint
 
-Target navigation structure:
-
 ```text
 src/app/AppRouter.tsx
-  owns current route and route rendering
+  owns HashRouter + Routes
 
 src/app/navigation/routes.ts
-  owns route/screen types and route constructors
-
-src/app/navigation/deepLinking.ts
-  maps incoming URLs to routes
+  owns ROUTES constants and AppRoute type
 
 src/presentation/screens/**
-  render screens and call navigation APIs
+  render screens; navigate via useNavigate()
 ```
 
-`App.tsx` should not keep growing with new screen cases, deep-link branches, and navigation callbacks. Put new routing work behind the router boundary.
+Add new routes by: (1) adding a constant to `routes.ts`, (2) adding a `<Route>` in `AppRouter.tsx`, (3) creating the screen file.
 
 ---
 
 ## Quality Gates
 
-Before relying on architecture changes, keep the validation path clean:
+Before merging changes:
 
-- `npm run lint`
-- `npm test -- --runInBand --no-watchman`
-- TypeScript checking when a script is available
-- Targeted web verification through `npm run dev:web`
-- Native simulator/device verification for native-only behavior
-
-General cleanup priorities:
-
-- Fix lint failures from unused variables before refactoring.
-- Ensure tests are not Watchman-dependent in restricted environments; use `--no-watchman` when needed.
-- Add CI or pre-merge checks for TypeScript, lint, and tests once the local gates are clean.
-
----
-
-## Migration Order
-
-Use this order when moving toward the target architecture:
-
-1. Fix lint and failing tests so refactors have a trustworthy baseline.
-2. Move shared/domain types and constants out of `presentation`.
-3. Remove unused placeholder folders or populate them with real contracts.
-4. Extract routing, provider composition, and deep-link handling from `App.tsx`.
-5. Split large screens, viewers, and services along responsibility boundaries.
-6. Expand README setup, environment, native build, testing, and linting docs.
-7. Add CI or pre-merge quality gates.
-
-Do this incrementally. The project does not need a full rewrite; it needs steady boundary tightening as features are touched.
+- `npx tsc --noEmit` from `frontend/` — zero errors required
+- `npm run build` from `frontend/` — production build must succeed
+- UI changes: verify in `npm run dev` (web) and optionally `npm run electron:dev` (desktop)
 
 ---
 
@@ -231,22 +183,22 @@ Do this incrementally. The project does not need a full rewrite; it needs steady
 
 | Command | Purpose |
 |---|---|
-| `npm run dev` | Start the dev server / Expo with the dev client. |
-| `npm run dev:web` | Start the web build. |
-| `npm run ios` | Run the iOS target. |
-| `npm run android` | Run the Android target. |
-| `npm test` | Run Jest. |
-| `npm run lint` | Run ESLint. |
+| `npm run dev` | Vite web dev server at `localhost:5173` |
+| `npm run build` | TypeScript check + production web build |
+| `npm run preview` | Preview production build locally |
+| `npm run electron:dev` | Vite + Electron desktop window (dev) |
+| `npm run electron:build` | Package Electron app to `release/` |
 
-_(Adjust commands to match your project's package.json scripts.)_
+Run all commands from the `frontend/` directory.
 
 ---
 
 ## Conventions
 
-- Use `@/...` imports for source files (or the alias configured in your project).
-- Keep API request/response shapes in `data`; keep business concepts in `domain`; keep UI-only contracts in `presentation`.
-- Prefer constants/types for repeated labels, IDs, statuses, tab names, and route names.
+- Use `@/...` imports for all source files (alias points to `src/`).
+- Route strings: always use `ROUTES.*` constants, never raw strings.
+- PvP mode IDs: always use `PVP_MODES` / `PVP_MODE_MAP`, never magic numbers.
+- Class/race/gender labels: always use `CLASS_NAMES`, `RACE_NAMES`, `GENDER_NAMES` from `domain/types/player.ts`.
 - Do not let `data` or `shared` import from `presentation`.
-- Introduce a repository only when it hides meaningful orchestration, caching, or multi-service composition.
-- Check for web fallbacks before introducing native-only imports.
+- Do not add external CSS files; add to `tokens.ts` or local `styles` objects instead.
+- Introduce a repository only when it hides meaningful orchestration across multiple services.

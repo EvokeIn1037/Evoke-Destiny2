@@ -1,0 +1,22 @@
+{
+  "appId": "com.evoke.destiny2",
+  "productName": "evoke's destiny finder",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "dist-electron/**/*"
+  ],
+  "mac": {
+    "target": "dmg",
+    "icon": "public/img/Icon9.ico"
+  },
+  "win": {
+    "target": "nsis",
+    "icon": "public/img/Icon9.ico"
+  },
+  "linux": {
+    "target": "AppImage"
+  }
+}
