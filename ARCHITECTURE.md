@@ -42,16 +42,18 @@ frontend/
   src/
     app/
       App.tsx            ← Thin boot entry: mounts AppProviders + AppRouter
-      AppProviders.tsx   ← Composes PlayerProvider, CharacterProvider, PvpProvider
+      AppProviders.tsx   ← Composes PlayerProvider, CharacterProvider, PvpProvider, RaidProvider
       AppRouter.tsx      ← HashRouter + route→screen mapping
       navigation/
-        routes.ts        ← ROUTES constants (/, /character, /pvp)
+        routes.ts        ← ROUTES constants (/, /character, /pvp, /raid, /hash)
     domain/
       types/
         player.ts        ← PlayerProfile, Character, CharacterDetail, GearItem, ClanInfo, CharacterStats
         pvp.ts           ← PvpActivity
+        raid.ts          ← RaidActivity
       constants/
-        pvpModes.ts      ← PVP_MODES array + PVP_MODE_MAP (mode id → Chinese label)
+        pvpModes.ts      ← PVP_MODES array + PVP_MODE_MAP (mode id → label)
+        raidModes.ts     ← RAID_MODES array + RAID_MODE_MAP (mode id → label)
     data/
       config/
         api.ts           ← fetch wrapper reading VITE_API_BASE_URL
@@ -59,6 +61,7 @@ frontend/
         playerService.ts    ← searchPlayer(name) → PlayerProfile
         characterService.ts ← loadCharacterDetail(membershipId, characterId) → CharacterDetail
         pvpService.ts       ← loadPvpActivities(membershipId, characterId, mode) → PvpActivity[]
+        raidService.ts      ← loadRaidActivities(membershipId, characterId, mode) → RaidActivity[]
       providers/
         player.type.ts      ← PlayerState + PlayerContextValue interface
         player.provider.tsx ← PlayerContext + useReducer + usePlayer() hook
@@ -66,11 +69,18 @@ frontend/
         character.provider.tsx ← CharacterContext + per-characterId state map + useCharacter() hook
         pvp.type.ts         ← PvpDataState + PvpContextValue interface
         pvp.provider.tsx    ← PvpContext + keyed by `${characterId}:${mode}` + usePvp() hook
+        raid.type.ts        ← RaidDataState + RaidContextValue interface
+        raid.provider.tsx   ← RaidContext + keyed by `${characterId}:${mode}` + useRaid() hook
     presentation/
+      assets/
+        img/               ← Static images (bungieload.gif, app icon)
+        video/             ← Background video files (mp4; gitignored if large)
       screens/
         HomePage.tsx       ← Video background + hero text
         CharacterPage.tsx  ← Search → per-character stats + gear + clan info
         PvpPage.tsx        ← Search → per-character mode selector → activity table
+        RaidPage.tsx       ← Search → per-character mode selector → raid activity table
+        HashPage.tsx       ← Manifest hash lookup tool (TODO: migrate off PHP backend)
       components/
         layout/
           Navbar.tsx       ← Sticky nav; active route highlighted in primary gold
@@ -109,7 +119,7 @@ frontend/
 Each data domain gets exactly two files:
 
 - `*.type.ts` — the context's TypeScript interface (state shape + action signatures). No React imports.
-- `*.provider.tsx` — `createContext` + `useReducer` state machine + exported hook (`usePlayer`, `useCharacter`, `usePvp`).
+- `*.provider.tsx` — `createContext` + `useReducer` state machine + exported hook (`usePlayer`, `useCharacter`, `usePvp`, `useRaid`).
 
 State machines use discriminated union `Action` types. Reducers are idempotent: a `LOAD_START` for an already-loading entry is a no-op at the reducer level.
 
@@ -168,14 +178,14 @@ backend/
 
 The frontend calls these endpoints. Services in `src/data/services/` map 1-to-1:
 
-| Method | Path | Service function | Replaces |
-|---|---|---|---|
-| `GET` | `/api/player/search?name={name}` | `searchPlayer` | `search/getInfo.php` |
-| `GET` | `/api/character/{membershipId}/{characterId}` | `loadCharacterDetail` | `search/getName.php` + `db/getName.php` |
-| `GET` | `/api/pvp/{membershipId}/{characterId}?mode={mode}` | `loadPvpActivities` | `db/pvp.php` |
-| `GET` | `/api/raid/{membershipId}/{characterId}?mode={mode}` | `loadRaidActivities` | `search/botRaidKf.php` |
-| `GET` | `/api/manifest/activity/{hash}` | — | `db/pvp.php` inline SQL |
-| `GET` | `/api/manifest/item/{hash}` | — | `db/getName.php` inline SQL |
+| Method | Path | Service function |
+|---|---|---|
+| `GET` | `/api/player/search?name={name}` | `searchPlayer` |
+| `GET` | `/api/character/{membershipId}/{characterId}` | `loadCharacterDetail` |
+| `GET` | `/api/pvp/{membershipId}/{characterId}?mode={mode}` | `loadPvpActivities` |
+| `GET` | `/api/raid/{membershipId}/{characterId}?mode={mode}` | `loadRaidActivities` |
+| `GET` | `/api/manifest/activity/{hash}` | — (called directly in pages) |
+| `GET` | `/api/manifest/item/{hash}` | — (called directly in pages) |
 
 All responses match the TypeScript interfaces in `src/domain/types/`. The `api.ts` config wrapper reads `VITE_API_BASE_URL` and throws a typed error on non-2xx responses.
 
@@ -184,7 +194,7 @@ All responses match the TypeScript interfaces in `src/domain/types/`. The `api.t
 - `membershipType` defaults to `3` (Steam/PC) on character, PvP, and raid endpoints. Pass `?membershipType=N` to override.
 - Gear items are returned in slot order: kinetic → energy → power → helmet → gauntlets → chest → legs → class. `GearGrid` relies on `slice(0,3)` / `slice(3,8)` matching this order.
 - `emblemBackgroundPath`, `bannerPath`, and `iconPath` are returned as bare Bungie paths (e.g. `/common/…`). The frontend prepends `https://www.bungie.net`.
-- Manifest hash → SQLite id conversion: if the high bit of the unsigned 32-bit hash is set, subtract 2³². This matches the `getid()` function from the legacy PHP.
+- Manifest hash → SQLite id conversion: if the high bit of the unsigned 32-bit hash is set, subtract 2³².
 
 ---
 
@@ -233,8 +243,15 @@ Run all commands from the `frontend/` directory.
 
 - Use `@/...` imports for all source files (alias points to `src/`).
 - Route strings: always use `ROUTES.*` constants, never raw strings.
-- PvP mode IDs: always use `PVP_MODES` / `PVP_MODE_MAP`, never magic numbers.
+- Mode IDs: always use `PVP_MODES` / `PVP_MODE_MAP` and `RAID_MODES` / `RAID_MODE_MAP`, never magic numbers.
 - Class/race/gender labels: always use `CLASS_NAMES`, `RACE_NAMES`, `GENDER_NAMES` from `domain/types/player.ts`.
 - Do not let `data` or `shared` import from `presentation`.
 - Do not add external CSS files; add to `tokens.ts` or local `styles` objects instead.
 - Introduce a repository only when it hides meaningful orchestration across multiple services.
+
+---
+
+## Planned / TODO
+
+- **i18n**: All display strings are currently hardcoded. Future plan is to introduce a locale layer (e.g. `src/shared/i18n/`) with a `t()` helper and JSON locale files. When adding new UI strings, keep them in one place per component so they're easy to extract later.
+- **HashPage backend**: `HashPage.tsx` currently calls a legacy `/hash/hash.php` endpoint. This should be migrated to a proper FastAPI route under `/api/manifest/`.
