@@ -35,6 +35,7 @@ _SLOT_RANK = {slot: i for i, (_, slot) in enumerate(_SLOT_ORDER)}
 async def _build_gear_item(
     item: dict,
     instances: dict,
+    lang: str = "en",
 ) -> GearItem | None:
     bucket_hash = item.get("bucketHash", 0)
     slot = _BUCKET_TO_SLOT.get(bucket_hash)
@@ -45,10 +46,10 @@ async def _build_gear_item(
     override_hash: int = item.get("overrideStyleItemHash", 0)
     instance_id: str = item.get("itemInstanceId", "")
 
-    name, base_icon = await manifest.get_item_display(item_hash)
+    name, base_icon = await manifest.get_item_display(item_hash, lang)
     icon = base_icon
     if override_hash:
-        _, override_icon = await manifest.get_item_display(override_hash)
+        _, override_icon = await manifest.get_item_display(override_hash, lang)
         if override_icon:
             icon = override_icon
 
@@ -69,6 +70,7 @@ async def get_character(
     membership_id: str,
     character_id: str,
     membership_type: int = Query(default=3),
+    lang: str = Query(default="en"),
 ):
     resp = await bungie.get(
         f"/Destiny2/{membership_type}/Profile/{membership_id}/Character/{character_id}/",
@@ -106,7 +108,7 @@ async def get_character(
     )
 
     gear_results = await asyncio.gather(
-        *(_build_gear_item(item, instances) for item in equip_items)
+        *(_build_gear_item(item, instances, lang) for item in equip_items)
     )
     gear = sorted(
         (g for g in gear_results if g is not None),

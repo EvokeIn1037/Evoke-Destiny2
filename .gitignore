@@ -1,7 +1,10 @@
+backend/venv/
+backend/app/db/*.db
 .DS_Store
 .dev-port
 .playwright-storage-state.json
 .playwright-storage-tmp.json
 .claude/settings.local.json
 reference/
-plans/
+tmux-orchestrator-prompt.md
+spec/

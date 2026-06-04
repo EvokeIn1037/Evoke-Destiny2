@@ -66,24 +66,40 @@ async def search_player(name: str = Query(...)):
     if not players:
         raise HTTPException(status_code=404, detail="Player not found")
 
-    player = players[0]
-    membership_id: str = player["membershipId"]
-    membership_type: int = player["membershipType"]
+    # Find the first membership that has an active profile (handles cross-save and
+    # platform accounts that exist in search but have no data).
+    active_player = None
+    profile_resp = None
+    for candidate in players:
+        mid = candidate["membershipId"]
+        mtype = candidate["membershipType"]
+        try:
+            resp = await bungie.get(
+                f"/Destiny2/{mtype}/Profile/{mid}/",
+                params={"components": "200"},
+            )
+            chars = resp.get("Response", {}).get("characters", {}).get("data", {})
+            if chars:
+                active_player = candidate
+                profile_resp = resp
+                break
+        except HTTPException:
+            continue
 
-    global_name = player.get("bungieGlobalDisplayName", "")
-    name_code = player.get("bungieGlobalDisplayNameCode")
+    if active_player is None or profile_resp is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    membership_id: str = active_player["membershipId"]
+    membership_type: int = active_player["membershipType"]
+
+    global_name = active_player.get("bungieGlobalDisplayName", "")
+    name_code = active_player.get("bungieGlobalDisplayNameCode")
     display_name = (
         f"{global_name}#{name_code}" if global_name and name_code is not None
-        else player.get("displayName", "")
+        else active_player.get("displayName", "")
     )
 
-    profile_resp, clan_resp = await asyncio.gather(
-        bungie.get(
-            f"/Destiny2/{membership_type}/Profile/{membership_id}/",
-            params={"components": "200"},
-        ),
-        bungie.get(f"/GroupV2/User/{membership_type}/{membership_id}/0/1/"),
-    )
+    clan_resp = await bungie.get(f"/GroupV2/User/{membership_type}/{membership_id}/0/1/")
 
     chars_raw = profile_resp.get("Response", {}).get("characters", {}).get("data", {})
     characters = [_parse_character(cid, data) for cid, data in chars_raw.items()]

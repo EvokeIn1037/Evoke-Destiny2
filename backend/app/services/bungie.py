@@ -1,4 +1,5 @@
 import httpx
+from fastapi import HTTPException
 
 from app.config import settings
 
@@ -11,5 +12,8 @@ async def get(path: str, params: dict | None = None) -> dict:
         headers={"X-API-Key": settings.bungie_api_key},
         params=params,
     )
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=str(e)) from e
     return response.json()

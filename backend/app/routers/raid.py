@@ -14,6 +14,7 @@ async def get_raid_activities(
     character_id: str,
     mode: int = Query(...),
     membership_type: int = Query(default=3),
+    lang: str = Query(default="en"),
 ):
     resp = await bungie.get(
         f"/Destiny2/{membership_type}/Account/{membership_id}/Character/{character_id}/Stats/Activities/",
@@ -24,7 +25,7 @@ async def get_raid_activities(
         return []
 
     hashes = list({a["activityDetails"]["referenceId"] for a in activities})
-    names = await asyncio.gather(*(manifest.get_activity_name(h) for h in hashes))
+    names = await asyncio.gather(*(manifest.get_activity_name(h, lang) for h in hashes))
     name_cache = dict(zip(hashes, names))
 
     result = []

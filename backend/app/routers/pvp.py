@@ -12,9 +12,9 @@ _TRIALS_LAB_HASH = 1728343233
 _TRIALS_MODE = 84
 
 
-async def _resolve_activities(activities: list[dict], mode: int) -> list[PvpActivity]:
+async def _resolve_activities(activities: list[dict], mode: int, lang: str = "en") -> list[PvpActivity]:
     hashes = list({a["activityDetails"]["referenceId"] for a in activities})
-    names = await asyncio.gather(*(manifest.get_activity_name(h) for h in hashes))
+    names = await asyncio.gather(*(manifest.get_activity_name(h, lang) for h in hashes))
     name_cache = dict(zip(hashes, names))
 
     result = []
@@ -52,6 +52,7 @@ async def get_pvp_activities(
     character_id: str,
     mode: int = Query(...),
     membership_type: int = Query(default=3),
+    lang: str = Query(default="en"),
 ):
     resp = await bungie.get(
         f"/Destiny2/{membership_type}/Account/{membership_id}/Character/{character_id}/Stats/Activities/",
@@ -60,4 +61,4 @@ async def get_pvp_activities(
     activities = resp.get("Response", {}).get("activities", [])
     if not activities:
         return []
-    return await _resolve_activities(activities, mode)
+    return await _resolve_activities(activities, mode, lang)

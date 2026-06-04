@@ -9,12 +9,19 @@ Orientation for agents working in this repo. For stack/file-layout details, read
 **evoke's destiny finder** uses the Bungie API for Destiny 2 game player data retrieving and game data search. Users enter a Bungie username and see their characters' stats, equipped gear, PvP match history per game mode, and clan info. The app calls a FastAPI backend which proxies the public Bungie API and queries a local Destiny manifest SQLite database to resolve activity and item names.
 
 The project has two deployment targets that share the same codebase:
+
 - **Web browser**: Vite dev server or static build served over HTTP.
 - **Desktop (Electron)**: same React build loaded inside a `BrowserWindow`. Electron main process lives in `frontend/electron/`.
 
 The backend is a separate Python/FastAPI process (`backend/`). The frontend talks to it via `VITE_API_BASE_URL` (default `http://localhost:8000`).
 
 If older documentation, skills, or comments conflict with what is described here, treat that as stale context and update it before relying on it.
+
+The original HTML pages (`index.html`, `character/`, `pvp/`, `raid/`) remain in the repo as reference only. They are **not** part of the active build.
+
+| Path                          | What it is                         |
+| ----------------------------- | ---------------------------------- |
+| `character/`, `pvp/`, `raid/` | Legacy HTML pages. Reference only. |
 
 ---
 
@@ -31,9 +38,8 @@ If older documentation, skills, or comments conflict with what is described here
 
 - **Strategic / context-setting prompts** ("here's what we're doing, look into things") → research and converse, don't pre-empt with edits.
 - **Tactical prompts** ("fix this bug", "rename this") → proceed normally.
-- **Keep platform differences explicit** — Electron-specific behavior belongs in `frontend/electron/`; web-specific behavior belongs behind a service boundary, not scattered through shared code.
+- **Provider boundary is sacred** — when in doubt about where logic belongs, push it inside the provider rather than leaking it out.
 - **When a feature fits a future phase**, flag it as such instead of scope-creeping the current one.
-- **CSS lives in `.tsx` files** — all styles are inline `const styles` objects typed as `CSSProperties`. No external `.css` files, no Tailwind, no CSS modules. Shared design values live in `frontend/src/presentation/styles/tokens.ts`.
 
 ## Coding principles
 
@@ -45,40 +51,37 @@ If older documentation, skills, or comments conflict with what is described here
 ## Running the app
 
 **Frontend (from `frontend/`):**
+
 - `npm run dev` — Vite web dev server at `localhost:5173`
 - `npm run build` — TypeScript check + production web build to `dist/`
 - `npm run electron:dev` — Vite + Electron desktop window (dev mode)
 - `npm run electron:build` — package Electron app to `release/`
 
 **Backend (from `backend/`):**
+
 - Copy `.env.example` to `.env` and set `BUNGIE_API_KEY`
 - `python scripts/update_manifest.py` — download latest Destiny manifest to `app/db/manifest.db`
 - `uvicorn app.main:app --reload` — FastAPI dev server at `localhost:8000`
+
+**Static assets** — copy before first run:
+
+```
+cp -r video/ frontend/public/video/
+cp -r img/   frontend/public/img/
+```
 
 **Environment** — copy `.env.example` to `.env` in `frontend/` and set `VITE_API_BASE_URL`.
 
 ## Verification
 
-Prefer the lightest verification that exercises the change:
+Every task spawns the **evaluator** — a verification subagent that lives from the start of the task to sign-off. You own implementation; the evaluator owns verification. Even simple changes go through it. Evaluators are stateful, so plan and agree with one evaluator from the start. For verification you're free to spawn more — make sure to kill any evaluator processes you no longer need.
 
-- Docs/config-only changes: inspect the edited files and run targeted searches for stale wording.
-- Type changes: `npx tsc --noEmit` from `frontend/`.
-- Build correctness: `npm run build` from `frontend/`.
-- Platform-specific (Electron) changes: `npm run electron:dev` and verify in the desktop window.
-- Backend service changes: cover success, error, and missing-data paths.
+**Spawn early.** As soon as you have a task, spawn the evaluator with the `Agent` tool (`subagent_type: 'evaluator'`, `run_in_background: true`). Brief = the user's full ask + your draft plan + the path to a plan file you'll share.
 
-Do not start unrelated servers or reset user state unless the task requires it.
-
-### Evaluator workflow (frontend only)
-
-Every non-trivial task — feature, bug fix, or refactor in `frontend/` — goes through the evaluator workflow. You own implementation; the evaluator owns the browser. Backend-only changes do not use this workflow.
-
-**Spawn early.** As soon as you have a frontend task, spawn the evaluator with the `Agent` tool (`subagent_type: 'evaluator'`, `run_in_background: true`). Brief it with the full task, your draft plan, and the path to the plan file you'll share.
-
-**Plan together.** Write the plan to `plans/<slug>.md` and share the path with the evaluator. It pushes back on coverage gaps, scope creep, and items that can't be verified. Converge before implementing. The plan must cover which screens/flows are affected, golden-path steps, edge cases, and regressions to watch for in adjacent screens.
-
-**Implement one item at a time.** After each, send the evaluator a verification request. Pass → mark the item's status in the plan file and move to the next. Fail or ambiguous → fix or clarify. Don't drive the browser yourself.
+**Plan together.** Write the plan to `plans/<slug>.md` and share the path with the evaluator. It pushes back on coverage gaps, scope creep, and items that can't be verified. Converge before implementing.
 
 **Take pushback seriously.** When the evaluator disagrees, engage the argument. You have final authority but using it is a last resort. If you override, record the disagreement in the plan's "Risks / unverified" section so it's traceable.
 
-**Sign off.** When all items pass, ask the evaluator for sign-off. Delete the plan file. Commit and open a PR to `development`. Report done.
+**Implement one item at a time.** After each, send the evaluator a verification request. Pass → mark the item's status in the plan file and move to the next. Fail or ambiguous → fix or clarify. Don't run the browser yourself — that's the evaluator's surface entirely.
+
+**Sign off.** When all items pass, ask the evaluator for sign-off. It may recommend writing or updating a testing skill — your call whether to act on that. Delete the plan file. Commit and open a PR to `development`. Report done.

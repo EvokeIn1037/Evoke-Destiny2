@@ -2,7 +2,7 @@ import asyncio
 import json
 import sqlite3
 
-from app.config import settings
+from app.config import get_manifest_db_path
 
 
 def _hash_to_id(hash_value: int) -> int:
@@ -12,10 +12,10 @@ def _hash_to_id(hash_value: int) -> int:
     return id_
 
 
-def _query(table: str, hash_value: int) -> dict | None:
+def _query(table: str, hash_value: int, lang: str = "en") -> dict | None:
     id_ = _hash_to_id(hash_value)
     try:
-        con = sqlite3.connect(settings.manifest_db_path)
+        con = sqlite3.connect(get_manifest_db_path(lang))
         cur = con.execute(f"SELECT json FROM {table} WHERE id = ?", (id_,))  # noqa: S608
         row = cur.fetchone()
         con.close()
@@ -26,16 +26,16 @@ def _query(table: str, hash_value: int) -> dict | None:
         return None
 
 
-async def get_activity_name(hash_value: int) -> str:
-    data = await asyncio.to_thread(_query, "DestinyActivityDefinition", hash_value)
+async def get_activity_name(hash_value: int, lang: str = "en") -> str:
+    data = await asyncio.to_thread(_query, "DestinyActivityDefinition", hash_value, lang)
     if not data:
         return ""
     return data.get("displayProperties", {}).get("name", "")
 
 
-async def get_item_display(hash_value: int) -> tuple[str, str]:
+async def get_item_display(hash_value: int, lang: str = "en") -> tuple[str, str]:
     """Returns (name, iconPath). iconPath starts with '/' for prepending bungie.net."""
-    data = await asyncio.to_thread(_query, "DestinyInventoryItemDefinition", hash_value)
+    data = await asyncio.to_thread(_query, "DestinyInventoryItemDefinition", hash_value, lang)
     if not data:
         return "", ""
     props = data.get("displayProperties", {})
