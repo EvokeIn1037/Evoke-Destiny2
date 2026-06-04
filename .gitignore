@@ -1,3 +1,5 @@
+backend/venv/
+backend/app/db/*.db
 .DS_Store
 .dev-port
 .playwright-storage-state.json
