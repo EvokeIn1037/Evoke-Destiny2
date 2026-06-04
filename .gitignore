@@ -3,3 +3,5 @@
 .playwright-storage-state.json
 .playwright-storage-tmp.json
 .claude/settings.local.json
+tmux-orchestrator-prompt.md
+spec/
