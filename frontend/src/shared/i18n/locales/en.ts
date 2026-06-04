@@ -1,0 +1,31 @@
+import type { Translation } from '../types';
+
+const t: Translation = {
+  nav: {
+    home: 'Home',
+    character: 'Player Stats',
+    pvp: 'PvP',
+    raid: 'Raids',
+    hash: 'Hash Lookup',
+    brand: "evoke's destiny",
+  },
+  search: {
+    placeholder: 'Enter Bungie name (e.g. Guardian#1234)',
+    button: 'Search',
+    loading: 'Searching...',
+    error: 'Search failed',
+    notFound: 'Player not found',
+  },
+  language: {
+    select: 'Select language',
+    label: 'Language',
+  },
+  common: {
+    loading: 'Loading...',
+    error: 'An error occurred',
+    retry: 'Retry',
+    noData: 'No data available',
+  },
+};
+
+export default t;

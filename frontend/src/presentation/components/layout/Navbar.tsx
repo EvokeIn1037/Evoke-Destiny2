@@ -1,19 +1,38 @@
 import { useState, type CSSProperties } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/shared/i18n';
 import { ROUTES } from '@/app/navigation/routes';
-import { colors, spacing, fontSizes, font } from '@/presentation/styles/tokens';
+import { colors, spacing, fontSizes, font, radii } from '@/presentation/styles/tokens';
 
-const NAV_ITEMS = [
-  { label: '主页', route: ROUTES.HOME },
-  { label: '个人数据', route: ROUTES.CHARACTER },
-  { label: 'pvp查询', route: ROUTES.PVP },
-  { label: '突袭查询', route: ROUTES.RAID },
-  { label: 'hash查询', route: ROUTES.HASH },
+const NAV_KEYS = [
+  { key: 'nav.home', route: ROUTES.HOME },
+  { key: 'nav.character', route: ROUTES.CHARACTER },
+  { key: 'nav.pvp', route: ROUTES.PVP },
+  { key: 'nav.raid', route: ROUTES.RAID },
+  { key: 'nav.hash', route: ROUTES.HASH },
+] as const;
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
+  { code: 'es-mx', label: 'Español (MX)' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'ja', label: '日本語' },
+  { code: 'pt-br', label: 'Português (BR)' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'pl', label: 'Polski' },
+  { code: 'ko', label: '한국어' },
+  { code: 'zh-cht', label: '繁體中文' },
+  { code: 'zh-chs', label: '简体中文' },
 ] as const;
 
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState<string | null>(null);
 
   const currentHash = '#' + location.pathname;
@@ -25,10 +44,10 @@ export default function Navbar() {
           style={styles.brand}
           onClick={() => navigate(ROUTES.HOME)}
         >
-          evoke's destiny
+          {t('nav.brand')}
         </span>
         <ul style={styles.list}>
-          {NAV_ITEMS.map(({ label, route }) => {
+          {NAV_KEYS.map(({ key, route }) => {
             const isActive = currentHash === '#' + route || location.pathname === route;
             const isHovered = hovered === route;
             return (
@@ -43,12 +62,22 @@ export default function Navbar() {
                   onMouseEnter={() => setHovered(route)}
                   onMouseLeave={() => setHovered(null)}
                 >
-                  {label}
+                  {t(key)}
                 </button>
               </li>
             );
           })}
         </ul>
+        <select
+          aria-label="Select language"
+          style={styles.langSelect}
+          value={i18n.language}
+          onChange={(e) => i18n.changeLanguage(e.target.value)}
+        >
+          {LANGUAGES.map(({ code, label }) => (
+            <option key={code} value={code}>{label}</option>
+          ))}
+        </select>
       </div>
     </nav>
   );
@@ -85,6 +114,7 @@ const styles: Record<string, CSSProperties> = {
     listStyle: 'none',
     margin: 0,
     padding: 0,
+    flex: 1,
   },
   item: {
     display: 'flex',
@@ -99,5 +129,16 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 'bold',
     padding: `${spacing.sm} ${spacing.md}`,
     transition: 'color 0.15s',
+  },
+  langSelect: {
+    backgroundColor: colors.bgSurface,
+    color: colors.primary,
+    border: '1px solid ' + colors.border,
+    borderRadius: radii.sm,
+    padding: '4px 8px',
+    cursor: 'pointer',
+    fontFamily: font.family,
+    fontSize: fontSizes.sm,
+    flexShrink: 0,
   },
 };

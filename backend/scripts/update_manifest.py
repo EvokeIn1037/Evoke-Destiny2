@@ -16,7 +16,7 @@ import urllib.request
 
 BUNGIE_ROOT = "https://www.bungie.net"
 MANIFEST_ENDPOINT = f"{BUNGIE_ROOT}/Platform/Destiny2/Manifest/"
-DB_PATH = "./app/db/manifest.db"
+DB_PATH = "./app/db/manifest_{locale}.db"
 SUPPORTED_LOCALES = ["en", "fr", "es", "es-mx", "de", "it", "ja", "pt-br", "ru", "pl", "ko", "zh-cht", "zh-chs"]
 
 
@@ -54,9 +54,9 @@ def _hash_to_id(hash_str: str) -> int:
     return id_
 
 
-def _build_db(content: dict) -> None:
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    con = sqlite3.connect(DB_PATH)
+def _build_db(content: dict, db_path: str) -> None:
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    con = sqlite3.connect(db_path)
     try:
         for table_name, definitions in content.items():
             if not isinstance(definitions, dict):
@@ -97,9 +97,10 @@ def main() -> None:
     with urllib.request.urlopen(req) as resp:
         content = json.loads(resp.read())
 
+    db_path = DB_PATH.format(locale=locale)
     print("Building SQLite database...")
-    _build_db(content)
-    print(f"Manifest saved to {DB_PATH}")
+    _build_db(content, db_path)
+    print(f"Manifest saved to {db_path}")
 
 
 if __name__ == "__main__":

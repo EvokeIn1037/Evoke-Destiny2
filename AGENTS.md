@@ -84,4 +84,4 @@ Every task spawns the **evaluator** — a verification subagent that lives from 
 
 **Implement one item at a time.** After each, send the evaluator a verification request. Pass → mark the item's status in the plan file and move to the next. Fail or ambiguous → fix or clarify. Don't run the browser yourself — that's the evaluator's surface entirely.
 
-**Sign off.** When all items pass, ask the evaluator for sign-off. It may recommend writing or updating a testing skill — your call whether to act on that. Delete the plan file. Commit and open a PR to `main`. Report done.
+**Sign off.** When all items pass, ask the evaluator for sign-off. It may recommend writing or updating a testing skill — your call whether to act on that. Delete the plan file. Commit and open a PR to `development`. Report done.
