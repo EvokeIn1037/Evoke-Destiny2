@@ -23,19 +23,13 @@ function formatLastPlayed(iso: string): string {
 }
 
 export default function StatTable({ character }: Props) {
-  const { classType, raceType, genderType, dateLastPlayed, minutesPlayedTotal, light, stats } = character;
+  const { classType, raceType, genderType, dateLastPlayed, minutesPlayedTotal, light } = character;
 
   const rows: [string, string | number][] = [
     ['职业', `${CLASS_NAMES[classType]} ${RACE_NAMES[raceType]} ${GENDER_NAMES[genderType]}`],
     ['上次登陆时间', formatLastPlayed(dateLastPlayed)],
     ['游戏时长', formatPlayTime(minutesPlayedTotal)],
     ['光等', light],
-    ['敏捷', stats.mobility],
-    ['韧性', stats.resilience],
-    ['恢复', stats.recovery],
-    ['纪律', stats.discipline],
-    ['智慧', stats.intellect],
-    ['力量', stats.strength],
   ];
 
   return (

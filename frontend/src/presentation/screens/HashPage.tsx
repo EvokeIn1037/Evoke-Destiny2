@@ -1,35 +1,25 @@
 import { useState, type CSSProperties } from 'react';
 import Navbar from '@/presentation/components/layout/Navbar';
 import Footer from '@/presentation/components/layout/Footer';
-import { colors, spacing, fontSizes, font, inputStyle, buttonStyle, surfaceStyle } from '@/presentation/styles/tokens';
+import { lookupHash, type HashResult } from '@/data/services/hashService';
+import { useAsync } from '@/shared/hooks/useAsync';
+import { colors, spacing, fontSizes, font, radii, inputStyle, buttonStyle, surfaceStyle } from '@/presentation/styles/tokens';
 
 export default function HashPage() {
   const [hashValue, setHashValue] = useState('');
-  const [result, setResult] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [error, setError] = useState<string | null>(null);
+  const { status, data, error, run } = useAsync<HashResult>();
 
-  const handleSearch = async () => {
+  const handleSearch = () => {
     const trimmed = hashValue.trim();
     if (!trimmed) return;
-    setStatus('loading');
-    setResult(null);
-    setError(null);
-    try {
-      const res = await fetch(`/hash/hash.php?q=${encodeURIComponent(trimmed)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = await res.text();
-      setResult(text);
-      setStatus('idle');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '查询失败');
-      setStatus('error');
-    }
+    run(lookupHash(trimmed));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleSearch();
   };
+
+  const iconUrl = data?.iconPath ? `https://www.bungie.net${data.iconPath}` : null;
 
   return (
     <div style={styles.page}>
@@ -58,9 +48,15 @@ export default function HashPage() {
         {status === 'error' && error && (
           <p style={styles.error}>{error}</p>
         )}
-        {result !== null && (
+        {status === 'success' && data && (
           <div style={styles.resultCard}>
-            <pre style={styles.result}>{result}</pre>
+            <div style={styles.resultRow}>
+              {iconUrl && <img style={styles.icon} src={iconUrl} alt="" />}
+              <div>
+                <p style={styles.resultName}>{data.name}</p>
+                <p style={styles.resultType}>{data.type}</p>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -72,7 +68,7 @@ export default function HashPage() {
 const styles: Record<string, CSSProperties> = {
   page: {
     backgroundColor: colors.bg,
-    minHeight: '100vh',
+    minHeight: '100dvh',
     display: 'flex',
     flexDirection: 'column',
   },
@@ -109,12 +105,28 @@ const styles: Record<string, CSSProperties> = {
     ...surfaceStyle,
     marginTop: spacing.md,
   },
-  result: {
+  resultRow: {
+    display: 'flex',
+    gap: spacing.md,
+    alignItems: 'center',
+  },
+  icon: {
+    width: '64px',
+    height: '64px',
+    borderRadius: radii.sm,
+  },
+  resultName: {
     color: colors.text,
     fontFamily: font.family,
-    fontSize: fontSizes.base,
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-all',
+    fontSize: fontSizes.lg,
+    fontWeight: 'bold',
     margin: 0,
+  },
+  resultType: {
+    color: colors.textMuted,
+    fontFamily: font.family,
+    fontSize: fontSizes.base,
+    margin: 0,
+    marginTop: spacing.xs,
   },
 };

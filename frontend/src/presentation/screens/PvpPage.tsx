@@ -58,15 +58,13 @@ export default function PvpPage() {
                     onSelect={(mode) => handleModeSelect(character.characterId, mode)}
                   />
                   {pvpState?.status === 'loading' && (
-                    <div style={styles.loadingWrapper}>
-                      <img src={bungieLoadGif} width={80} alt="loading" />
-                    </div>
+                    <ActivityTable loading mode={selectedMode ?? undefined} />
                   )}
                   {pvpState?.status === 'error' && (
                     <p style={styles.error}>{pvpState.error}</p>
                   )}
                   {pvpState?.status === 'success' && (
-                    <ActivityTable activities={pvpState.activities} />
+                    <ActivityTable activities={pvpState.activities} mode={selectedMode ?? undefined} />
                   )}
                 </div>
               );
@@ -82,7 +80,7 @@ export default function PvpPage() {
 const styles: Record<string, CSSProperties> = {
   page: {
     backgroundColor: colors.bg,
-    minHeight: '100vh',
+    minHeight: '100dvh',
     display: 'flex',
     flexDirection: 'column',
   },

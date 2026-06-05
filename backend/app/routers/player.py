@@ -1,24 +1,12 @@
-import asyncio
-
 from fastapi import APIRouter, HTTPException, Query
 
-from app.models.player import Character, CharacterStats, ClanInfo, PlayerProfile
+from app.models.player import Character, ClanInfo, PlayerProfile
 from app.services import bungie
 
 router = APIRouter()
 
-_STAT_HASHES = {
-    "mobility": "2996146975",
-    "resilience": "392767087",
-    "recovery": "1943323491",
-    "discipline": "1735777505",
-    "intellect": "144602215",
-    "strength": "4244567218",
-}
-
 
 def _parse_character(char_id: str, data: dict) -> Character:
-    raw = data.get("stats", {})
     return Character(
         characterId=char_id,
         classType=data.get("classType", 0),
@@ -28,14 +16,7 @@ def _parse_character(char_id: str, data: dict) -> Character:
         emblemBackgroundPath=data.get("emblemBackgroundPath", ""),
         dateLastPlayed=data.get("dateLastPlayed", ""),
         minutesPlayedTotal=int(data.get("minutesPlayedTotal", 0)),
-        stats=CharacterStats(
-            mobility=raw.get(_STAT_HASHES["mobility"], 0),
-            resilience=raw.get(_STAT_HASHES["resilience"], 0),
-            recovery=raw.get(_STAT_HASHES["recovery"], 0),
-            discipline=raw.get(_STAT_HASHES["discipline"], 0),
-            intellect=raw.get(_STAT_HASHES["intellect"], 0),
-            strength=raw.get(_STAT_HASHES["strength"], 0),
-        ),
+        stats={str(k): int(v) for k, v in data.get("stats", {}).items()},
     )
 
 

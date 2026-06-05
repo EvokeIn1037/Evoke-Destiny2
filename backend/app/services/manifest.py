@@ -40,3 +40,37 @@ async def get_item_display(hash_value: int, lang: str = "en") -> tuple[str, str]
         return "", ""
     props = data.get("displayProperties", {})
     return props.get("name", ""), props.get("icon", "")
+
+
+HASH_LOOKUP_TABLES = [
+    "DestinyInventoryItemDefinition",
+    "DestinyActivityDefinition",
+    "DestinyActivityModeDefinition",
+    "DestinyDestinationDefinition",
+    "DestinyPlaceDefinition",
+    "DestinyVendorDefinition",
+    "DestinyClassDefinition",
+    "DestinyRaceDefinition",
+    "DestinyFactionDefinition",
+    "DestinyMilestoneDefinition",
+]
+
+
+def _lookup_hash(hash_value: int, lang: str) -> dict | None:
+    for table in HASH_LOOKUP_TABLES:
+        data = _query(table, hash_value, lang)
+        if not data:
+            continue
+        props = data.get("displayProperties", {})
+        name = props.get("name", "")
+        if name:
+            return {"name": name, "iconPath": props.get("icon", ""), "type": table}
+    return None
+
+
+async def get_hash_display(hash_value: int, lang: str = "en") -> dict | None:
+    """Resolve an arbitrary hash by scanning common definition tables.
+
+    Returns {name, iconPath, type} for the first table with a named match, else None.
+    """
+    return await asyncio.to_thread(_lookup_hash, hash_value, lang)

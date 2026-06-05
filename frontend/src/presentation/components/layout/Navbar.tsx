@@ -10,7 +10,6 @@ const NAV_KEYS = [
   { key: 'nav.character', route: ROUTES.CHARACTER },
   { key: 'nav.pvp', route: ROUTES.PVP },
   { key: 'nav.raid', route: ROUTES.RAID },
-  { key: 'nav.hash', route: ROUTES.HASH },
 ] as const;
 
 const LANGUAGES = [

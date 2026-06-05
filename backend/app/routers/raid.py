@@ -1,9 +1,7 @@
-import asyncio
-
 from fastapi import APIRouter, Query
 
 from app.models.raid import RaidActivity
-from app.services import bungie, manifest
+from app.services import bungie
 
 router = APIRouter()
 
@@ -14,7 +12,6 @@ async def get_raid_activities(
     character_id: str,
     mode: int = Query(...),
     membership_type: int = Query(default=3),
-    lang: str = Query(default="en"),
 ):
     resp = await bungie.get(
         f"/Destiny2/{membership_type}/Account/{membership_id}/Character/{character_id}/Stats/Activities/",
@@ -24,24 +21,18 @@ async def get_raid_activities(
     if not activities:
         return []
 
-    hashes = list({a["activityDetails"]["referenceId"] for a in activities})
-    names = await asyncio.gather(*(manifest.get_activity_name(h, lang) for h in hashes))
-    name_cache = dict(zip(hashes, names))
-
     result = []
     for act in activities:
         details = act.get("activityDetails", {})
         values = act.get("values", {})
-        ref_hash = details.get("referenceId", 0)
         result.append(
             RaidActivity(
-                activityHash=ref_hash,
-                raidName=name_cache.get(ref_hash, ""),
+                activityHash=details.get("referenceId", 0),
                 completed=bool(values.get("completed", {}).get("basic", {}).get("value", 0)),
                 kills=int(values.get("kills", {}).get("basic", {}).get("value", 0)),
                 deaths=int(values.get("deaths", {}).get("basic", {}).get("value", 0)),
                 assists=int(values.get("assists", {}).get("basic", {}).get("value", 0)),
-                duration=values.get("activityDurationSeconds", {}).get("basic", {}).get("displayValue", ""),
+                durationSeconds=int(values.get("activityDurationSeconds", {}).get("basic", {}).get("value", 0)),
                 period=act.get("period", ""),
             )
         )

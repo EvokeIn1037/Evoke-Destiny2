@@ -1,12 +1,12 @@
 import type { CSSProperties } from 'react';
 
 export const colors = {
-  bg: '#0d0d14',
-  bgSurface: '#14141f',
-  bgCard: '#1a1a2e',
-  bgCardHover: '#1f1f38',
-  border: '#2a2a4a',
-  borderLight: '#3a3a5a',
+  bg: '#0f0f0f',
+  bgSurface: '#161616',
+  bgCard: '#1c1c1c',
+  bgCardHover: '#222222',
+  border: '#2a2a2a',
+  borderLight: '#333333',
   primary: '#c8a951',
   primaryHover: '#e4c86c',
   accent: '#5bc0eb',
@@ -15,7 +15,7 @@ export const colors = {
   textDim: '#5a5a7a',
   error: '#ef5350',
   success: '#66bb6a',
-  navBg: '#0a0a16',
+  navBg: '#111111',
   overlay: 'rgba(0,0,0,0.7)',
 };
 
@@ -40,7 +40,7 @@ export const fontSizes = {
 };
 
 export const font = {
-  family: '"FangSong", "仿宋", "FangSong_GB2312", "Noto Serif SC", serif',
+  family: '"Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans SC", sans-serif',
 };
 
 export const radii = {
