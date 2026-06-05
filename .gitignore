@@ -5,6 +5,7 @@ backend/app/db/*.db
 .playwright-storage-state.json
 .playwright-storage-tmp.json
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 reference/
 tmux-orchestrator-prompt.md
 spec/
