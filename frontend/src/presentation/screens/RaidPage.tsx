@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import bungieLoadGif from '@/presentation/assets/img/bungieload.gif';
 import { usePlayer } from '@/data/providers/player.provider';
 import { useRaid } from '@/data/providers/raid.provider';
@@ -7,18 +7,44 @@ import Footer from '@/presentation/components/layout/Footer';
 import SearchBar from '@/presentation/components/player/SearchBar';
 import CharacterCard from '@/presentation/components/player/CharacterCard';
 import { RAID_MODES } from '@/domain/constants/raidModes';
+import { batchResolveHashes } from '@/data/services/hashService';
 import { colors, spacing, fontSizes, font } from '@/presentation/styles/tokens';
+
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
 export default function RaidPage() {
   const { status: playerStatus, profile, error: playerError, search } = usePlayer();
   const { load, getState } = useRaid();
   const [selectedModes, setSelectedModes] = useState<Record<string, number>>({});
+  const [raidNames, setRaidNames] = useState<Record<string, string>>({});
 
   const handleModeSelect = (characterId: string, mode: number) => {
     if (!profile) return;
     setSelectedModes((prev) => ({ ...prev, [characterId]: mode }));
     load(profile.membershipId, characterId, mode);
   };
+
+  useEffect(() => {
+    const allHashes: number[] = [];
+    if (!profile) return;
+    for (const char of profile.characters) {
+      const mode = selectedModes[char.characterId];
+      if (mode === undefined) continue;
+      const state = getState(char.characterId, mode);
+      if (state.status === 'success') {
+        for (const a of state.activities) allHashes.push(a.activityHash);
+      }
+    }
+    const unique = [...new Set(allHashes)];
+    if (unique.length === 0) return;
+    batchResolveHashes(unique).then((names) => setRaidNames((prev) => ({ ...prev, ...names }))).catch(() => undefined);
+  }, [profile, selectedModes, getState]);
 
   return (
     <div style={styles.page}>
@@ -95,14 +121,14 @@ export default function RaidPage() {
                         <tbody>
                           {raidState.activities.map((a, i) => (
                             <tr key={i} style={i % 2 === 0 ? styles.rowEven : undefined}>
-                              <td style={styles.td}>{a.raidName}</td>
+                              <td style={styles.td}>{raidNames[String(a.activityHash)] ?? ''}</td>
                               <td style={{ ...styles.td, color: a.completed ? colors.success : colors.error }}>
                                 {a.completed ? '✓' : '✗'}
                               </td>
                               <td style={styles.td}>{a.kills}</td>
                               <td style={styles.td}>{a.deaths}</td>
                               <td style={styles.td}>{a.assists}</td>
-                              <td style={styles.td}>{a.duration}</td>
+                              <td style={styles.td}>{formatDuration(a.durationSeconds)}</td>
                               <td style={styles.td}>{a.period.slice(0, 10)}</td>
                             </tr>
                           ))}
@@ -124,7 +150,7 @@ export default function RaidPage() {
 const styles: Record<string, CSSProperties> = {
   page: {
     backgroundColor: colors.bg,
-    minHeight: '100vh',
+    minHeight: '100dvh',
     display: 'flex',
     flexDirection: 'column',
   },

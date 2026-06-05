@@ -1,6 +1,7 @@
 export interface PvpActivity {
   activityHash: number;
-  mapName: string;
+  activityDirectorHash: number;
+  standing: number;
   kills: number;
   deaths: number;
   assists: number;
@@ -8,5 +9,4 @@ export interface PvpActivity {
   killsDeathsAssists: number;
   efficiency: number;
   period: string;
-  isTrialsLab: boolean;
 }

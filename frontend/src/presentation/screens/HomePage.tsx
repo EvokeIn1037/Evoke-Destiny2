@@ -1,10 +1,32 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import finalShapeVideo from '@/presentation/assets/video/The_Final_Shape.mp4';
 import Navbar from '@/presentation/components/layout/Navbar';
 import Footer from '@/presentation/components/layout/Footer';
 import { colors, spacing, fontSizes, font } from '@/presentation/styles/tokens';
 
 export default function HomePage() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq.matches) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => undefined);
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div style={styles.page}>
       <Navbar />
@@ -14,12 +36,14 @@ export default function HomePage() {
       </div>
       <div style={styles.videoWrapper}>
         <video
+          ref={videoRef}
           src={finalShapeVideo}
           style={styles.video}
-          autoPlay
           muted
           loop
           playsInline
+          preload="none"
+          aria-label="Destiny 2: The Final Shape 宣传视频"
         />
       </div>
       <Footer />
@@ -30,7 +54,7 @@ export default function HomePage() {
 const styles: Record<string, CSSProperties> = {
   page: {
     backgroundColor: colors.bg,
-    minHeight: '100vh',
+    minHeight: '100dvh',
     display: 'flex',
     flexDirection: 'column',
   },
@@ -46,7 +70,7 @@ const styles: Record<string, CSSProperties> = {
   title: {
     color: colors.text,
     fontFamily: font.family,
-    fontSize: fontSizes.xxl,
+    fontSize: `clamp(${fontSizes.xl}, 5vw, ${fontSizes.xxl})`,
     fontWeight: 'bold',
     marginBottom: spacing.sm,
   },
@@ -64,6 +88,8 @@ const styles: Record<string, CSSProperties> = {
   },
   video: {
     width: '100%',
+    maxHeight: '70vh',
+    objectFit: 'cover',
     display: 'block',
     borderRadius: '8px',
     border: `1px solid ${colors.border}`,

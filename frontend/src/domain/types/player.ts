@@ -30,10 +30,10 @@ export interface CharacterStats {
 
 export interface GearItem {
   itemHash: number;
+  bucketHash: number;
   name: string;
   iconPath: string;
   light: number;
-  slot: 'kinetic' | 'energy' | 'power' | 'helmet' | 'gauntlets' | 'chest' | 'legs' | 'class';
 }
 
 export interface Character {
@@ -45,10 +45,11 @@ export interface Character {
   emblemBackgroundPath: string;
   dateLastPlayed: string;
   minutesPlayedTotal: number;
-  stats: CharacterStats;
+  stats: Record<string, number>;
 }
 
-export interface CharacterDetail extends Character {
+export interface CharacterDetail extends Omit<Character, 'stats'> {
+  stats: CharacterStats;
   gear: GearItem[];
 }
 

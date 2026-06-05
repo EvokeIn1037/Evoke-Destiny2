@@ -1,23 +1,12 @@
-from typing import Literal
-
 from pydantic import BaseModel
-
-
-class CharacterStats(BaseModel):
-    mobility: int
-    resilience: int
-    recovery: int
-    discipline: int
-    intellect: int
-    strength: int
 
 
 class GearItem(BaseModel):
     itemHash: int
+    bucketHash: int
     name: str
     iconPath: str
     light: int
-    slot: Literal["kinetic", "energy", "power", "helmet", "gauntlets", "chest", "legs", "class"]
 
 
 class Character(BaseModel):
@@ -29,7 +18,7 @@ class Character(BaseModel):
     emblemBackgroundPath: str
     dateLastPlayed: str
     minutesPlayedTotal: int
-    stats: CharacterStats
+    stats: dict[str, int]
 
 
 class CharacterDetail(Character):

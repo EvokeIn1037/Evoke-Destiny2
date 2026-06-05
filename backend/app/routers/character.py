@@ -1,45 +1,27 @@
 import asyncio
-from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.models.player import Character, CharacterDetail, CharacterStats, GearItem
+from app.models.player import Character, CharacterDetail, GearItem
 from app.services import bungie, manifest
 
 router = APIRouter()
 
-_STAT_HASHES = {
-    "mobility": "2996146975",
-    "resilience": "392767087",
-    "recovery": "1943323491",
-    "discipline": "1735777505",
-    "intellect": "144602215",
-    "strength": "4244567218",
-}
-
-# Maps Bungie bucket hash → GearItem slot name, in display order
-_SLOT_ORDER: list[tuple[int, Literal["kinetic", "energy", "power", "helmet", "gauntlets", "chest", "legs", "class"]]] = [
-    (1498876634, "kinetic"),
-    (2465295065, "energy"),
-    (953998645, "power"),
-    (3448274439, "helmet"),
-    (3551918588, "gauntlets"),
-    (14239492, "chest"),
-    (20886954, "legs"),
-    (1585787867, "class"),
-]
-_BUCKET_TO_SLOT = {bucket: slot for bucket, slot in _SLOT_ORDER}
-_SLOT_RANK = {slot: i for i, (_, slot) in enumerate(_SLOT_ORDER)}
+_VALID_BUCKETS = frozenset({
+    1498876634,  # kinetic
+    2465295065,  # energy
+    953998645,   # power
+    3448274439,  # helmet
+    3551918588,  # gauntlets
+    14239492,    # chest
+    20886954,    # legs
+    1585787867,  # class
+})
 
 
-async def _build_gear_item(
-    item: dict,
-    instances: dict,
-    lang: str = "en",
-) -> GearItem | None:
+async def _build_gear_item(item: dict, instances: dict, lang: str = "en") -> GearItem | None:
     bucket_hash = item.get("bucketHash", 0)
-    slot = _BUCKET_TO_SLOT.get(bucket_hash)
-    if slot is None:
+    if bucket_hash not in _VALID_BUCKETS:
         return None
 
     item_hash: int = item["itemHash"]
@@ -58,10 +40,10 @@ async def _build_gear_item(
 
     return GearItem(
         itemHash=item_hash,
+        bucketHash=bucket_hash,
         name=name,
         iconPath=icon,
         light=light,
-        slot=slot,
     )
 
 
@@ -83,11 +65,8 @@ async def get_character(
         raise HTTPException(status_code=404, detail="Character not found")
 
     equip_items = response.get("equipment", {}).get("data", {}).get("items", [])
-    instances = (
-        response.get("itemComponents", {}).get("instances", {}).get("data", {})
-    )
+    instances = response.get("itemComponents", {}).get("instances", {}).get("data", {})
 
-    raw = char_data.get("stats", {})
     character = Character(
         characterId=character_id,
         classType=char_data.get("classType", 0),
@@ -97,22 +76,12 @@ async def get_character(
         emblemBackgroundPath=char_data.get("emblemBackgroundPath", ""),
         dateLastPlayed=char_data.get("dateLastPlayed", ""),
         minutesPlayedTotal=int(char_data.get("minutesPlayedTotal", 0)),
-        stats=CharacterStats(
-            mobility=raw.get(_STAT_HASHES["mobility"], 0),
-            resilience=raw.get(_STAT_HASHES["resilience"], 0),
-            recovery=raw.get(_STAT_HASHES["recovery"], 0),
-            discipline=raw.get(_STAT_HASHES["discipline"], 0),
-            intellect=raw.get(_STAT_HASHES["intellect"], 0),
-            strength=raw.get(_STAT_HASHES["strength"], 0),
-        ),
+        stats={str(k): int(v) for k, v in char_data.get("stats", {}).items()},
     )
 
     gear_results = await asyncio.gather(
         *(_build_gear_item(item, instances, lang) for item in equip_items)
     )
-    gear = sorted(
-        (g for g in gear_results if g is not None),
-        key=lambda g: _SLOT_RANK.get(g.slot, 99),
-    )
+    gear = [g for g in gear_results if g is not None]
 
     return CharacterDetail(**character.model_dump(), gear=gear)

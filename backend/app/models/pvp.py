@@ -3,7 +3,8 @@ from pydantic import BaseModel
 
 class PvpActivity(BaseModel):
     activityHash: int
-    mapName: str
+    activityDirectorHash: int
+    standing: int
     kills: int
     deaths: int
     assists: int
@@ -11,4 +12,3 @@ class PvpActivity(BaseModel):
     killsDeathsAssists: float
     efficiency: float
     period: str
-    isTrialsLab: bool

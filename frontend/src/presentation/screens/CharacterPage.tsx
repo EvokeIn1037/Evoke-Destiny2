@@ -6,10 +6,22 @@ import Navbar from '@/presentation/components/layout/Navbar';
 import Footer from '@/presentation/components/layout/Footer';
 import SearchBar from '@/presentation/components/player/SearchBar';
 import CharacterCard from '@/presentation/components/player/CharacterCard';
+import PlayerHeader from '@/presentation/components/player/PlayerHeader';
 import StatTable from '@/presentation/components/player/StatTable';
+import StatCard from '@/presentation/components/player/StatCard';
 import GearGrid from '@/presentation/components/player/GearGrid';
 import ClanInfo from '@/presentation/components/player/ClanInfo';
+import type { CharacterStats } from '@/domain/types/player';
 import { colors, spacing, fontSizes, font } from '@/presentation/styles/tokens';
+
+const STAT_FIELDS: [string, keyof CharacterStats][] = [
+  ['敏捷', 'mobility'],
+  ['韧性', 'resilience'],
+  ['恢复', 'recovery'],
+  ['纪律', 'discipline'],
+  ['智慧', 'intellect'],
+  ['力量', 'strength'],
+];
 
 export default function CharacterPage() {
   const { status: playerStatus, profile, error: playerError, search } = usePlayer();
@@ -44,6 +56,7 @@ export default function CharacterPage() {
         )}
         {playerStatus === 'success' && profile && (
           <div>
+            <PlayerHeader profile={profile} />
             {profile.characters.map((character) => {
               const charState = getState(character.characterId);
               return (
@@ -57,6 +70,11 @@ export default function CharacterPage() {
                   {charState.status === 'success' && charState.detail && (
                     <div style={styles.detailWrapper}>
                       <StatTable character={charState.detail} />
+                      <div style={styles.statGrid}>
+                        {STAT_FIELDS.map(([label, key]) => (
+                          <StatCard key={key} label={label} value={charState.detail!.stats[key]} />
+                        ))}
+                      </div>
                       {charState.detail.gear.length > 0 && (
                         <GearGrid gear={charState.detail.gear} />
                       )}
@@ -80,7 +98,7 @@ export default function CharacterPage() {
 const styles: Record<string, CSSProperties> = {
   page: {
     backgroundColor: colors.bg,
-    minHeight: '100vh',
+    minHeight: '100dvh',
     display: 'flex',
     flexDirection: 'column',
   },
@@ -149,5 +167,10 @@ const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: spacing.md,
+  },
+  statGrid: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
 };
