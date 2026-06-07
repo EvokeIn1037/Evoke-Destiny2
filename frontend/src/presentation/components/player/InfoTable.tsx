@@ -1,33 +1,35 @@
-import type { CSSProperties } from 'react';
+import React, { type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { CharacterDetail } from '@/domain/types/player';
-import { CLASS_NAMES, RACE_NAMES, GENDER_NAMES } from '@/domain/types/player';
 import { colors, spacing, fontSizes, font, surfaceStyle } from '@/presentation/styles/tokens';
 
 interface Props {
   character: CharacterDetail;
 }
 
-function formatPlayTime(minutes: number): string {
+function formatPlayTime(minutes: number, tHour: string, tMinute: string): string {
   if (minutes >= 60) {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return `${h}小时${m}分钟`;
+    return `${h}${tHour} ${m}${tMinute}`;
   }
-  return `${minutes}分钟`;
+  return `${minutes}${tMinute}`;
 }
 
 function formatLastPlayed(iso: string): string {
   return new Date(iso).toLocaleString();
 }
 
-export default function StatTable({ character }: Props) {
-  const { classType, raceType, genderType, dateLastPlayed, minutesPlayedTotal, light } = character;
+export default function InfoTable({ character }: Props) {
+  const { t } = useTranslation();
+  const { class_name, race_name, race_description, dateLastPlayed, minutesPlayedTotal, light } = character;
 
-  const rows: [string, string | number][] = [
-    ['职业', `${CLASS_NAMES[classType]} ${RACE_NAMES[raceType]} ${GENDER_NAMES[genderType]}`],
-    ['上次登陆时间', formatLastPlayed(dateLastPlayed)],
-    ['游戏时长', formatPlayTime(minutesPlayedTotal)],
-    ['光等', light],
+  const rows: [string, React.ReactNode][] = [
+    [t('character.classInfo'), <strong>{race_name} {class_name}</strong>],
+    [t('character.description'), race_description],
+    [t('character.lastPlayed'), formatLastPlayed(dateLastPlayed)],
+    [t('character.playTime'), formatPlayTime(minutesPlayedTotal, t('common.hour'), t('common.minute'))],
+    [t('character.lightLevel'), light],
   ];
 
   return (

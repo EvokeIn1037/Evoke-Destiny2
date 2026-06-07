@@ -18,11 +18,17 @@ const t: Translation = {
     hint: 'Bungie 이름을 입력하여 시작하세요',
     weapons: '무기',
     armor: '방어구',
+    classInfo: '직업',
+    description: '설명',
+    lastPlayed: '마지막 플레이',
+    playTime: '플레이 시간',
+    lightLevel: '광레벨',
   },
   clan: {
+    title: '클랜 정보',
     membersCount: '멤버 {{count}}명',
-    motto: '모토',
-    about: '소개',
+    motto: '모토: ',
+    about: '소개: ',
   },
   search: {
     placeholder: 'Bungie 이름 입력 (예: 수호자#1234)',
@@ -40,6 +46,8 @@ const t: Translation = {
     error: '오류가 발생했습니다',
     retry: '다시 시도',
     noData: '데이터 없음',
+    hour: '시간',
+    minute: '분',
   },
 };
 

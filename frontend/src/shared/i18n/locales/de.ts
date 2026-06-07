@@ -18,11 +18,17 @@ const t: Translation = {
     hint: 'Gib deinen Bungie-Namen ein, um zu beginnen',
     weapons: 'Waffen',
     armor: 'Rüstung',
+    classInfo: 'Klasse',
+    description: 'Beschreibung',
+    lastPlayed: 'Zuletzt gespielt',
+    playTime: 'Spielzeit',
+    lightLevel: 'Lichtstufe',
   },
   clan: {
+    title: 'Clan-Info',
     membersCount: '{{count}} Mitglieder',
-    motto: 'MOTTO',
-    about: 'ÜBER UNS',
+    motto: 'MOTTO: ',
+    about: 'ÜBER UNS: ',
   },
   search: {
     placeholder: 'Bungie-Name eingeben (z.B. Hüter#1234)',
@@ -40,6 +46,8 @@ const t: Translation = {
     error: 'Ein Fehler ist aufgetreten',
     retry: 'Erneut versuchen',
     noData: 'Keine Daten verfügbar',
+    hour: 'Std',
+    minute: 'Min',
   },
 };
 

@@ -18,11 +18,17 @@ const t: Translation = {
     hint: 'Digite seu nome Bungie para começar',
     weapons: 'Armas',
     armor: 'Armadura',
+    classInfo: 'Classe',
+    description: 'Descrição',
+    lastPlayed: 'Último acesso',
+    playTime: 'Tempo jogado',
+    lightLevel: 'Nível de luz',
   },
   clan: {
+    title: 'Info do clã',
     membersCount: '{{count}} membros',
-    motto: 'LEMA',
-    about: 'SOBRE NÓS',
+    motto: 'LEMA: ',
+    about: 'SOBRE NÓS: ',
   },
   search: {
     placeholder: 'Digite o nome Bungie (ex. Guardião#1234)',
@@ -40,6 +46,8 @@ const t: Translation = {
     error: 'Ocorreu um erro',
     retry: 'Tentar novamente',
     noData: 'Sem dados disponíveis',
+    hour: 'h',
+    minute: 'min',
   },
 };
 

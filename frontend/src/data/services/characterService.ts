@@ -1,6 +1,5 @@
 import { apiClient } from '@/data/config/api';
 import type { CharacterDetail, ClassType, RaceType, GenderType, GearItem } from '@/domain/types/player';
-import { mapRawStats } from '@/domain/constants/statHashes';
 import { BUCKET_TO_SLOT, slotRank } from '@/domain/constants/bucketSlots';
 
 interface RawCharacterDetail {
@@ -21,13 +20,12 @@ interface RawCharacterDetail {
 
 export async function loadCharacterDetail(
   membershipId: string,
-  characterId: string
+  characterId: string,
+  lang: string
 ): Promise<CharacterDetail> {
   const raw = await apiClient.get<RawCharacterDetail>(
-    `/api/character/${membershipId}/${characterId}`
+    `/api/character/${membershipId}/${characterId}?lang=${encodeURIComponent(lang)}`
   );
-
-  const stats = mapRawStats(raw.stats);
 
   const gear = raw.gear
     .filter(item => item.bucketHash in BUCKET_TO_SLOT)
@@ -44,7 +42,7 @@ export async function loadCharacterDetail(
     emblemBackgroundPath: raw.emblemBackgroundPath,
     dateLastPlayed: raw.dateLastPlayed,
     minutesPlayedTotal: raw.minutesPlayedTotal,
-    stats,
+    stats: raw.stats,
     gear,
     race_name: raw.race_name,
     race_description: raw.race_description,

@@ -8,34 +8,30 @@ import Footer from '@/presentation/components/layout/Footer';
 import SearchBar from '@/presentation/components/player/SearchBar';
 import CharacterCard from '@/presentation/components/player/CharacterCard';
 import PlayerHeader from '@/presentation/components/player/PlayerHeader';
-import StatTable from '@/presentation/components/player/StatTable';
+import InfoTable from '@/presentation/components/player/InfoTable';
 import StatCard from '@/presentation/components/player/StatCard';
 import GearGrid from '@/presentation/components/player/GearGrid';
 import ClanInfo from '@/presentation/components/player/ClanInfo';
-import type { CharacterStats } from '@/domain/types/player';
 import { colors, spacing, fontSizes, font } from '@/presentation/styles/tokens';
 
-const STAT_FIELDS: [string, keyof CharacterStats][] = [
-  ['敏捷', 'mobility'],
-  ['韧性', 'resilience'],
-  ['恢复', 'recovery'],
-  ['纪律', 'discipline'],
-  ['智慧', 'intellect'],
-  ['力量', 'strength'],
-];
-
 export default function CharacterPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { status: playerStatus, profile, error: playerError, search } = usePlayer();
   const { load, getState } = useCharacter();
-  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
-  const effectiveSelectedId = selectedCharacterId ?? profile?.characters[0]?.characterId;
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+
+  const toggleExpanded = (id: string) =>
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   useEffect(() => {
     if (profile) {
-      profile.characters.forEach((c) => load(profile.membershipId, c.characterId));
+      profile.characters.forEach((c) => load(profile.membershipId, c.characterId, i18n.language));
     }
-  }, [profile, load]);
+  }, [profile, load, i18n.language]);
 
   return (
     <div style={styles.page}>
@@ -62,26 +58,21 @@ export default function CharacterPage() {
           <div>
             <PlayerHeader profile={profile} />
             {profile.characters.map((character) => {
-              const charState = getState(character.characterId);
-              const isSelected = character.characterId === effectiveSelectedId;
+              const charState = getState(character.characterId, i18n.language);
+              const isExpanded = expandedIds.has(character.characterId);
               return (
                 <div key={character.characterId} style={styles.characterSection}>
                   <CharacterCard
                     character={character}
-                    isSelected={isSelected}
-                    onClick={() => setSelectedCharacterId(character.characterId)}
+                    isSelected={isExpanded}
+                    onClick={() => toggleExpanded(character.characterId)}
                   />
-                  {isSelected && charState.status === 'loading' && (
-                    <div style={styles.loadingWrapper}>
-                      <img src={bungieLoadGif} width={80} alt="loading" />
-                    </div>
-                  )}
-                  {isSelected && charState.status === 'success' && charState.detail && (
+                  {isExpanded && charState.status === 'success' && charState.detail && (
                     <div style={styles.detailWrapper}>
-                      <StatTable character={charState.detail} />
+                      <InfoTable character={charState.detail} />
                       <div style={styles.statGrid}>
-                        {STAT_FIELDS.map(([label, key]) => (
-                          <StatCard key={key} label={label} value={charState.detail!.stats[key]} />
+                        {charState.detail.stats.map(({ name, value }) => (
+                          <StatCard key={name} label={name} value={value} />
                         ))}
                       </div>
                       {charState.detail.gear.length > 0 && (
@@ -89,7 +80,7 @@ export default function CharacterPage() {
                       )}
                     </div>
                   )}
-                  {isSelected && charState.status === 'error' && (
+                  {isExpanded && charState.status === 'error' && (
                     <p style={styles.error}>{charState.error}</p>
                   )}
                 </div>

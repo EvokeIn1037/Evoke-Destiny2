@@ -52,7 +52,7 @@ async def get_character(
     membership_id: str,
     character_id: str,
     membership_type: int = Query(default=3),
-    lang: str = Query(default="en"),
+    lang: str = Query(...),
 ):
     resp = await bungie.get(
         f"/Destiny2/{membership_type}/Profile/{membership_id}/Character/{character_id}/",

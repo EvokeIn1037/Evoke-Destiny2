@@ -18,11 +18,17 @@ const t: Translation = {
     hint: '请输入Bungie昵称',
     weapons: '武器',
     armor: '防具',
+    classInfo: '职业',
+    description: '简介',
+    lastPlayed: '上次登陆时间',
+    playTime: '游戏时长',
+    lightLevel: '光等',
   },
   clan: {
+    title: '公会信息',
     membersCount: '{{count}} 名成员',
-    motto: 'MOTTO：',
-    about: 'ABOUT US：',
+    motto: 'MOTTO: ',
+    about: '关于我们: ',
   },
   search: {
     placeholder: '输入Bungie名称（例如 守护者#1234）',
@@ -40,6 +46,8 @@ const t: Translation = {
     error: '发生错误',
     retry: '重试',
     noData: '暂无数据',
+    hour: '小时',
+    minute: '分钟',
   },
 };
 
