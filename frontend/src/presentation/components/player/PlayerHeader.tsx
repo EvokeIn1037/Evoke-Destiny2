@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { PlayerProfile } from '@/domain/types/player';
 import { colors, spacing, fontSizes, font, radii } from '@/presentation/styles/tokens';
+import { decodeHtml } from '@/shared/utils/bungieName';
 
 interface Props {
   profile: PlayerProfile;
@@ -19,7 +20,7 @@ export default function PlayerHeader({ profile }: Props) {
           <h3 style={styles.name}>{profile.displayName}</h3>
           {profile.clan && (
             <p style={styles.clan}>
-              {profile.clan.name} [{profile.clan.callsign}]
+              {decodeHtml(profile.clan.name)} [{decodeHtml(profile.clan.callsign)}]
             </p>
           )}
         </div>

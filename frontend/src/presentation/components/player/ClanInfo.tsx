@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ClanInfo as ClanInfoType } from '@/domain/types/player';
 import { colors, spacing, fontSizes, font, surfaceStyle, radii } from '@/presentation/styles/tokens';
+import { decodeHtml } from '@/shared/utils/bungieName';
 
 interface Props {
   clan: ClanInfoType;
@@ -18,15 +19,15 @@ export default function ClanInfo({ clan }: Props) {
         <img src={bannerUrl} alt="clan banner" style={styles.banner} />
         <div style={styles.details}>
           <p style={styles.name}>
-            <strong>{clan.name}</strong>
-            <span style={styles.callsign}> [{clan.callsign}]</span>
+            <strong>{decodeHtml(clan.name)}</strong>
+            <span style={styles.callsign}> [{decodeHtml(clan.callsign)}]</span>
           </p>
           <p style={styles.meta}>{t('clan.membersCount', { count: clan.memberCount })}</p>
-          {clan.motto && <p style={styles.motto}><strong>{t('clan.motto')}</strong>{clan.motto}</p>}
+          {clan.motto && <p style={styles.motto}><strong>{t('clan.motto')}</strong>{decodeHtml(clan.motto)}</p>}
           {clan.about && (
             <div style={styles.about}>
               <strong>{t('clan.about')}</strong>
-              <p style={styles.aboutText}>{clan.about}</p>
+              <p style={styles.aboutText}>{decodeHtml(clan.about)}</p>
             </div>
           )}
         </div>
