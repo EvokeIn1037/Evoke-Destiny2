@@ -16,6 +16,13 @@ const t: Translation = {
   character: {
     pageTitle: '个人数据',
     hint: '请输入Bungie昵称',
+    weapons: '武器',
+    armor: '防具',
+  },
+  clan: {
+    membersCount: '{{count}} 名成员',
+    motto: 'MOTTO：',
+    about: 'ABOUT US：',
   },
   search: {
     placeholder: '输入Bungie名称（例如 守护者#1234）',

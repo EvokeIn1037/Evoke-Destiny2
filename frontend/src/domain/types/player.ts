@@ -51,6 +51,9 @@ export interface Character {
 export interface CharacterDetail extends Omit<Character, 'stats'> {
   stats: CharacterStats;
   gear: GearItem[];
+  race_name: string;
+  race_description: string;
+  class_name: string;
 }
 
 export interface ClanInfo {

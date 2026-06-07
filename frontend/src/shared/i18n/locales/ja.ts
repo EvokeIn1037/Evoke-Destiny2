@@ -16,6 +16,13 @@ const t: Translation = {
   character: {
     pageTitle: 'プレイヤー統計',
     hint: 'Bungie名を入力して始めてください',
+    weapons: '武器',
+    armor: '防具',
+  },
+  clan: {
+    membersCount: '{{count}} 名のメンバー',
+    motto: 'モットー',
+    about: '私たちについて',
   },
   search: {
     placeholder: 'Bungie名を入力（例：ガーディアン#1234）',

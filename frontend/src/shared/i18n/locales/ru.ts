@@ -16,6 +16,13 @@ const t: Translation = {
   character: {
     pageTitle: 'Статистика',
     hint: 'Введите своё имя Bungie для начала',
+    weapons: 'Оружие',
+    armor: 'Броня',
+  },
+  clan: {
+    membersCount: '{{count}} участников',
+    motto: 'ДЕВИЗ',
+    about: 'О НАС',
   },
   search: {
     placeholder: 'Введите имя Bungie (напр. Страж#1234)',

@@ -12,8 +12,11 @@ interface RawCharacterDetail {
   emblemBackgroundPath: string;
   dateLastPlayed: string;
   minutesPlayedTotal: number;
-  stats: Record<string, number>;
+  stats: Array<{ name: string; value: number }>;
   gear: GearItem[];
+  race_name: string;
+  race_description: string;
+  class_name: string;
 }
 
 export async function loadCharacterDetail(
@@ -43,5 +46,8 @@ export async function loadCharacterDetail(
     minutesPlayedTotal: raw.minutesPlayedTotal,
     stats,
     gear,
+    race_name: raw.race_name,
+    race_description: raw.race_description,
+    class_name: raw.class_name,
   };
 }

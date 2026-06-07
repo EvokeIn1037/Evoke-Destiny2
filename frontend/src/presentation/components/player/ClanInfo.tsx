@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ClanInfo as ClanInfoType } from '@/domain/types/player';
 import { colors, spacing, fontSizes, font, surfaceStyle, radii } from '@/presentation/styles/tokens';
 
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export default function ClanInfo({ clan }: Props) {
+  const { t } = useTranslation();
   const bannerUrl = `https://www.bungie.net${clan.bannerPath}`;
 
   return (
@@ -19,11 +21,11 @@ export default function ClanInfo({ clan }: Props) {
             <strong>{clan.name}</strong>
             <span style={styles.callsign}> [{clan.callsign}]</span>
           </p>
-          <p style={styles.meta}>{clan.memberCount} 名成员</p>
-          {clan.motto && <p style={styles.motto}><strong>MOTTO：</strong>{clan.motto}</p>}
+          <p style={styles.meta}>{t('clan.membersCount', { count: clan.memberCount })}</p>
+          {clan.motto && <p style={styles.motto}><strong>{t('clan.motto')}</strong>{clan.motto}</p>}
           {clan.about && (
             <div style={styles.about}>
-              <strong>ABOUT US：</strong>
+              <strong>{t('clan.about')}</strong>
               <p style={styles.aboutText}>{clan.about}</p>
             </div>
           )}

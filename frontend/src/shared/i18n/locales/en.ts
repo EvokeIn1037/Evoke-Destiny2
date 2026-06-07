@@ -16,6 +16,13 @@ const t: Translation = {
   character: {
     pageTitle: 'Player Stats',
     hint: 'Enter your Bungie name to get started',
+    weapons: 'Weapons',
+    armor: 'Armor',
+  },
+  clan: {
+    membersCount: '{{count}} Members',
+    motto: 'MOTTO',
+    about: 'ABOUT US',
   },
   search: {
     placeholder: 'Enter Bungie name (e.g. Guardian#1234)',

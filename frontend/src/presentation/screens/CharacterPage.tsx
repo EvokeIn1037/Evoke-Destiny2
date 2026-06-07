@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlayer } from '@/data/providers/player.provider';
 import { useCharacter } from '@/data/providers/character.provider';
@@ -28,6 +28,8 @@ export default function CharacterPage() {
   const { t } = useTranslation();
   const { status: playerStatus, profile, error: playerError, search } = usePlayer();
   const { load, getState } = useCharacter();
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
+  const effectiveSelectedId = selectedCharacterId ?? profile?.characters[0]?.characterId;
 
   useEffect(() => {
     if (profile) {
@@ -61,15 +63,20 @@ export default function CharacterPage() {
             <PlayerHeader profile={profile} />
             {profile.characters.map((character) => {
               const charState = getState(character.characterId);
+              const isSelected = character.characterId === effectiveSelectedId;
               return (
                 <div key={character.characterId} style={styles.characterSection}>
-                  <CharacterCard character={character} />
-                  {charState.status === 'loading' && (
+                  <CharacterCard
+                    character={character}
+                    isSelected={isSelected}
+                    onClick={() => setSelectedCharacterId(character.characterId)}
+                  />
+                  {isSelected && charState.status === 'loading' && (
                     <div style={styles.loadingWrapper}>
                       <img src={bungieLoadGif} width={80} alt="loading" />
                     </div>
                   )}
-                  {charState.status === 'success' && charState.detail && (
+                  {isSelected && charState.status === 'success' && charState.detail && (
                     <div style={styles.detailWrapper}>
                       <StatTable character={charState.detail} />
                       <div style={styles.statGrid}>
@@ -82,7 +89,7 @@ export default function CharacterPage() {
                       )}
                     </div>
                   )}
-                  {charState.status === 'error' && (
+                  {isSelected && charState.status === 'error' && (
                     <p style={styles.error}>{charState.error}</p>
                   )}
                 </div>

@@ -16,6 +16,13 @@ const t: Translation = {
   character: {
     pageTitle: 'Statystyki',
     hint: 'Wpisz swoją nazwę Bungie, aby rozpocząć',
+    weapons: 'Broń',
+    armor: 'Zbroja',
+  },
+  clan: {
+    membersCount: '{{count}} członków',
+    motto: 'MOTTO',
+    about: 'O NAS',
   },
   search: {
     placeholder: 'Podaj nazwę Bungie (np. Strażnik#1234)',

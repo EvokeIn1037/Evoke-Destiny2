@@ -14,6 +14,13 @@ export interface Translation {
   character: {
     pageTitle: string;
     hint: string;
+    weapons: string;
+    armor: string;
+  };
+  clan: {
+    membersCount: string;
+    motto: string;
+    about: string;
   };
   search: {
     placeholder: string;

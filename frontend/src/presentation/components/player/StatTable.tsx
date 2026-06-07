@@ -17,9 +17,7 @@ function formatPlayTime(minutes: number): string {
 }
 
 function formatLastPlayed(iso: string): string {
-  const idx = iso.indexOf('T');
-  if (idx === -1) return iso;
-  return iso.substring(0, idx) + '  ' + iso.substring(idx + 1).replace('Z', '');
+  return new Date(iso).toLocaleString();
 }
 
 export default function StatTable({ character }: Props) {

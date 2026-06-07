@@ -89,3 +89,53 @@ async def get_hash_display(hash_value: int, lang: str = "en") -> dict | None:
     Returns {name, iconPath, type} for the first table with a named match, else None.
     """
     return await asyncio.to_thread(_lookup_hash, hash_value, lang)
+
+
+async def get_stat_display(hash_value: int, lang: str = "en") -> str:
+    data = await asyncio.to_thread(_query, "DestinyStatDefinition", hash_value, lang)
+    if not data:
+        return ""
+    return data.get("displayProperties", {}).get("name", "")
+
+
+def _scan_enum_table(table: str, field: str, value: int, lang: str) -> dict | None:
+    with _open_db(lang) as con:
+        try:
+            cur = con.execute(f"SELECT json FROM {table}")  # noqa: S608
+            for (row_json,) in cur:
+                data = json.loads(row_json)
+                if data.get(field) == value:
+                    return data
+        except sqlite3.OperationalError:
+            pass
+    return None
+
+
+def _get_race_info(race_type_int: int, gender_type_int: int, lang: str) -> tuple[str, str]:
+    data = _scan_enum_table("DestinyRaceDefinition", "raceType", race_type_int, lang)
+    if not data:
+        return "", ""
+    gender_key = "Male" if gender_type_int == 0 else "Female"
+    race_name = data.get("genderedRaceNames", {}).get(
+        gender_key, data.get("displayProperties", {}).get("name", "")
+    )
+    race_desc = data.get("displayProperties", {}).get("description", "")
+    return race_name, race_desc
+
+
+async def get_race_info(race_type_int: int, gender_type_int: int, lang: str = "en") -> tuple[str, str]:
+    return await asyncio.to_thread(_get_race_info, race_type_int, gender_type_int, lang)
+
+
+def _get_class_name(class_type_int: int, gender_type_int: int, lang: str) -> str:
+    data = _scan_enum_table("DestinyClassDefinition", "classType", class_type_int, lang)
+    if not data:
+        return ""
+    gender_key = "Male" if gender_type_int == 0 else "Female"
+    return data.get("genderedClassNames", {}).get(
+        gender_key, data.get("displayProperties", {}).get("name", "")
+    )
+
+
+async def get_class_name(class_type_int: int, gender_type_int: int, lang: str = "en") -> str:
+    return await asyncio.to_thread(_get_class_name, class_type_int, gender_type_int, lang)
