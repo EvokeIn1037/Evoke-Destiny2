@@ -1,10 +1,12 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import finalShapeVideo from '@/presentation/assets/video/The_Final_Shape.mp4';
 import Navbar from '@/presentation/components/layout/Navbar';
 import Footer from '@/presentation/components/layout/Footer';
 import { colors, spacing, fontSizes, font } from '@/presentation/styles/tokens';
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -31,8 +33,8 @@ export default function HomePage() {
     <div style={styles.page}>
       <Navbar />
       <div style={styles.hero}>
-        <h1 style={styles.title}>evoke's destiny finder</h1>
-        <p style={styles.subtitle}>应该会有各种个人数据、武器数据查询吧~</p>
+        <h1 style={styles.title}>{t('home.title')}</h1>
+        <p style={styles.subtitle}>{t('home.subtitle')}</p>
       </div>
       <div style={styles.videoWrapper}>
         <video

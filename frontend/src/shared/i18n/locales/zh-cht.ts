@@ -9,6 +9,14 @@ const t: Translation = {
     hash: 'Hash查詢',
     brand: "evoke's destiny",
   },
+  home: {
+    title: "evoke's destiny finder",
+    subtitle: '個人數據、武器數據查詢等功能',
+  },
+  character: {
+    pageTitle: '個人數據',
+    hint: '請輸入Bungie暱稱',
+  },
   search: {
     placeholder: '輸入Bungie名稱（例如 守護者#1234）',
     button: '搜尋',

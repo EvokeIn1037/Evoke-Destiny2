@@ -1,4 +1,5 @@
 import { useEffect, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePlayer } from '@/data/providers/player.provider';
 import { useCharacter } from '@/data/providers/character.provider';
 import bungieLoadGif from '@/presentation/assets/img/bungieload.gif';
@@ -24,6 +25,7 @@ const STAT_FIELDS: [string, keyof CharacterStats][] = [
 ];
 
 export default function CharacterPage() {
+  const { t } = useTranslation();
   const { status: playerStatus, profile, error: playerError, search } = usePlayer();
   const { load, getState } = useCharacter();
 
@@ -41,13 +43,13 @@ export default function CharacterPage() {
         <SearchBar onSearch={search} loading={playerStatus === 'loading'} />
       </div>
       <div style={styles.main}>
-        <h2 style={styles.pageTitle}>个人数据</h2>
+        <h2 style={styles.pageTitle}>{t('character.pageTitle')}</h2>
         {playerStatus === 'idle' && (
-          <p style={styles.hint}>请输入Bungie昵称</p>
+          <p style={styles.hint}>{t('character.hint')}</p>
         )}
         {playerStatus === 'loading' && (
           <div style={styles.loadingWrapper}>
-            <p style={styles.loadingText}>加载中...</p>
+            <p style={styles.loadingText}>{t('common.loading')}</p>
             <img src={bungieLoadGif} width={160} alt="loading" />
           </div>
         )}
