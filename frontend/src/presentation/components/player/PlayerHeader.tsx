@@ -17,7 +17,7 @@ export default function PlayerHeader({ profile }: Props) {
       {bannerUrl && <img src={bannerUrl} alt="" style={styles.bannerImg} />}
       <div style={styles.overlay}>
         <div>
-          <h3 style={styles.name}>{profile.displayName}</h3>
+          <h3 style={styles.name}>{decodeHtml(profile.displayName)}</h3>
           {profile.clan && (
             <p style={styles.clan}>
               {decodeHtml(profile.clan.name)} [{decodeHtml(profile.clan.callsign)}]

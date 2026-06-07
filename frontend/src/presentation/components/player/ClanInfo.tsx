@@ -49,15 +49,13 @@ const styles: Record<string, CSSProperties> = {
   },
   body: {
     display: 'flex',
+    flexDirection: 'column',
     gap: spacing.lg,
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
   },
   banner: {
-    width: '120px',
+    width: '50%',
     height: 'auto',
     borderRadius: radii.md,
-    flexShrink: 0,
   },
   details: {
     flex: 1,

@@ -19,8 +19,8 @@ export default function CharacterPage() {
   const { status: playerStatus, profile, error: playerError, search } = usePlayer();
   const { load, getState } = useCharacter();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
-  const lastQuery = useRef('');
   const langRef = useRef(i18n.language);
+  const searchLangRef = useRef(i18n.language);
 
   useEffect(() => { langRef.current = i18n.language; });
 
@@ -32,14 +32,13 @@ export default function CharacterPage() {
     });
 
   const handleSearch = (name: string) => {
-    lastQuery.current = name;
+    searchLangRef.current = i18n.language;
     search(name);
   };
 
-  useEffect(() => {
-    if (lastQuery.current) search(lastQuery.current);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [i18n.language]);
+  const effectiveStatus = playerStatus !== 'loading' && i18n.language !== searchLangRef.current
+    ? 'idle'
+    : playerStatus;
 
   useEffect(() => {
     if (!profile) return;
@@ -51,23 +50,23 @@ export default function CharacterPage() {
       <Navbar />
       <div style={styles.header}>
         <h1 style={styles.brand}>evoke's destiny</h1>
-        <SearchBar onSearch={handleSearch} loading={playerStatus === 'loading'} />
+        <SearchBar onSearch={handleSearch} loading={effectiveStatus === 'loading'} />
       </div>
       <div style={styles.main}>
         <h2 style={styles.pageTitle}>{t('character.pageTitle')}</h2>
-        {playerStatus === 'idle' && (
+        {effectiveStatus === 'idle' && (
           <p style={styles.hint}>{t('character.hint')}</p>
         )}
-        {playerStatus === 'loading' && (
+        {effectiveStatus === 'loading' && (
           <div style={styles.loadingWrapper}>
             <p style={styles.loadingText}>{t('common.loading')}</p>
             <img src={bungieLoadGif} width={160} alt="loading" />
           </div>
         )}
-        {playerStatus === 'error' && (
+        {effectiveStatus === 'error' && (
           <p style={styles.error}>{playerError}</p>
         )}
-        {playerStatus === 'success' && profile && (
+        {effectiveStatus === 'success' && profile && (
           <div>
             <PlayerHeader profile={profile} />
             {profile.characters.map((character) => {
