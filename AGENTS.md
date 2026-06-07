@@ -46,7 +46,7 @@ The original HTML pages (`index.html`, `character/`, `pvp/`, `raid/`) remain in 
 - **Simple beats clever.** Ship the approach that solves the problem in front of us and reads well. Don't pre-build for hypothetical short-tail cases — the abstraction guessed at usually doesn't survive contact with the real second use.
 - **Build the seam when N≥2 is real.** When a second variant of something is already on the roadmap (another provider, another command type), put the abstraction in now. The provider and command patterns are paid-for examples.
 - **Folder boundaries are semantic.** `controller/` is glue, `engine/` isolates Babylon, `services/` is provider-shaped, `store/` is Zustand. New code goes in the layer it belongs to — don't smear logic across layers.
-- **Strings are bugs.** Use enums/types for anything referenced in more than one place — printers, workflow steps, scene names, mesh colors. Lives in `types/` and `constants/`.
+- **Strings are bugs.** Use enums/types for anything referenced in more than one place — routes (`ROUTES`), PvP mode IDs (`PVP_MODES`), raid modes (`RAID_MODES`).
 - **Comments are bugs too.** Default to none. Well-named identifiers should carry the _what_; only write a comment when the _why_ is genuinely non-obvious (a hidden constraint, a workaround, a subtle invariant). Don't describe behavior the code already shows, don't narrate task history ("added for X", "fix from PR #N"), and don't write multi-line docstrings — one short line max. If removing the comment wouldn't confuse a future reader, don't write it.
 
 ## Running the app
