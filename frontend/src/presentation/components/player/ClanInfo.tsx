@@ -1,30 +1,33 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ClanInfo as ClanInfoType } from '@/domain/types/player';
 import { colors, spacing, fontSizes, font, surfaceStyle, radii } from '@/presentation/styles/tokens';
+import { decodeHtml } from '@/shared/utils/bungieName';
 
 interface Props {
   clan: ClanInfoType;
 }
 
 export default function ClanInfo({ clan }: Props) {
+  const { t } = useTranslation();
   const bannerUrl = `https://www.bungie.net${clan.bannerPath}`;
 
   return (
     <div style={{ ...surfaceStyle, ...styles.wrapper }}>
-      <h3 style={styles.heading}>公会信息</h3>
+      <h3 style={styles.heading}>{t('clan.title')}</h3>
       <div style={styles.body}>
         <img src={bannerUrl} alt="clan banner" style={styles.banner} />
         <div style={styles.details}>
           <p style={styles.name}>
-            <strong>{clan.name}</strong>
-            <span style={styles.callsign}> [{clan.callsign}]</span>
+            <strong>{decodeHtml(clan.name)}</strong>
+            <span style={styles.callsign}> [{decodeHtml(clan.callsign)}]</span>
           </p>
-          <p style={styles.meta}>{clan.memberCount} 名成员</p>
-          {clan.motto && <p style={styles.motto}><strong>MOTTO：</strong>{clan.motto}</p>}
+          <p style={styles.meta}>{t('clan.membersCount', { count: clan.memberCount })}</p>
+          {clan.motto && <p style={styles.motto}><strong>{t('clan.motto')}</strong>{decodeHtml(clan.motto)}</p>}
           {clan.about && (
             <div style={styles.about}>
-              <strong>ABOUT US：</strong>
-              <p style={styles.aboutText}>{clan.about}</p>
+              <strong>{t('clan.about')}</strong>
+              <p style={styles.aboutText}>{decodeHtml(clan.about)}</p>
             </div>
           )}
         </div>
@@ -46,15 +49,13 @@ const styles: Record<string, CSSProperties> = {
   },
   body: {
     display: 'flex',
+    flexDirection: 'column',
     gap: spacing.lg,
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
   },
   banner: {
-    width: '120px',
+    width: '50%',
     height: 'auto',
     borderRadius: radii.md,
-    flexShrink: 0,
   },
   details: {
     flex: 1,

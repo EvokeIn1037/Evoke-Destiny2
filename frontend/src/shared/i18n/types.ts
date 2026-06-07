@@ -14,6 +14,19 @@ export interface Translation {
   character: {
     pageTitle: string;
     hint: string;
+    weapons: string;
+    armor: string;
+    classInfo: string;
+    description: string;
+    lastPlayed: string;
+    playTime: string;
+    lightLevel: string;
+  };
+  clan: {
+    title: string;
+    membersCount: string;
+    motto: string;
+    about: string;
   };
   search: {
     placeholder: string;
@@ -31,5 +44,7 @@ export interface Translation {
     error: string;
     retry: string;
     noData: string;
+    hour: string;
+    minute: string;
   };
 }

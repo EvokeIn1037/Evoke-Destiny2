@@ -10,6 +10,6 @@ export interface CharacterDetailState {
 
 export interface CharacterContextValue {
   characters: Record<string, CharacterDetailState>;
-  load: (membershipId: string, characterId: string) => void;
-  getState: (characterId: string) => CharacterDetailState;
+  load: (membershipId: string, characterId: string, lang: string) => void;
+  getState: (characterId: string, lang: string) => CharacterDetailState;
 }

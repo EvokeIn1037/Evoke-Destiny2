@@ -83,7 +83,7 @@ def main() -> None:
             zf.extract(names[0], tmp_dir)
             extracted = os.path.join(tmp_dir, names[0])
 
-        dest = os.path.join(DB_DIR, f"world_sql_content_{locale}.sqlite")
+        dest = os.path.join(DB_DIR, f"manifest_{locale}.db")
         if os.path.exists(dest):
             os.remove(dest)
         os.rename(extracted, dest)

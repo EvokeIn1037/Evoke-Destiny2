@@ -16,6 +16,19 @@ const t: Translation = {
   character: {
     pageTitle: 'Player Stats',
     hint: 'Enter your Bungie name to get started',
+    weapons: 'Weapons',
+    armor: 'Armor',
+    classInfo: 'Class',
+    description: 'Description',
+    lastPlayed: 'Last Played',
+    playTime: 'Time Played',
+    lightLevel: 'Light Level',
+  },
+  clan: {
+    title: 'Clan Info',
+    membersCount: '{{count}} Members',
+    motto: 'MOTTO: ',
+    about: 'ABOUT US: ',
   },
   search: {
     placeholder: 'Enter Bungie name (e.g. Guardian#1234)',
@@ -33,6 +46,8 @@ const t: Translation = {
     error: 'An error occurred',
     retry: 'Retry',
     noData: 'No data available',
+    hour: 'h',
+    minute: 'm',
   },
 };
 

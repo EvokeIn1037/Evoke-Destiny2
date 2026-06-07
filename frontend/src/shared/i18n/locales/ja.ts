@@ -16,6 +16,19 @@ const t: Translation = {
   character: {
     pageTitle: 'プレイヤー統計',
     hint: 'Bungie名を入力して始めてください',
+    weapons: '武器',
+    armor: '防具',
+    classInfo: 'クラス',
+    description: '説明',
+    lastPlayed: '最終プレイ日時',
+    playTime: 'プレイ時間',
+    lightLevel: 'ライトレベル',
+  },
+  clan: {
+    title: 'クラン情報',
+    membersCount: '{{count}} 名のメンバー',
+    motto: 'モットー: ',
+    about: '私たちについて: ',
   },
   search: {
     placeholder: 'Bungie名を入力（例：ガーディアン#1234）',
@@ -33,6 +46,8 @@ const t: Translation = {
     error: 'エラーが発生しました',
     retry: '再試行',
     noData: 'データがありません',
+    hour: '時間',
+    minute: '分',
   },
 };
 

@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlayer } from '@/data/providers/player.provider';
 import { useCharacter } from '@/data/providers/character.provider';
@@ -8,31 +8,41 @@ import Footer from '@/presentation/components/layout/Footer';
 import SearchBar from '@/presentation/components/player/SearchBar';
 import CharacterCard from '@/presentation/components/player/CharacterCard';
 import PlayerHeader from '@/presentation/components/player/PlayerHeader';
-import StatTable from '@/presentation/components/player/StatTable';
+import InfoTable from '@/presentation/components/player/InfoTable';
 import StatCard from '@/presentation/components/player/StatCard';
 import GearGrid from '@/presentation/components/player/GearGrid';
 import ClanInfo from '@/presentation/components/player/ClanInfo';
-import type { CharacterStats } from '@/domain/types/player';
 import { colors, spacing, fontSizes, font } from '@/presentation/styles/tokens';
 
-const STAT_FIELDS: [string, keyof CharacterStats][] = [
-  ['敏捷', 'mobility'],
-  ['韧性', 'resilience'],
-  ['恢复', 'recovery'],
-  ['纪律', 'discipline'],
-  ['智慧', 'intellect'],
-  ['力量', 'strength'],
-];
-
 export default function CharacterPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { status: playerStatus, profile, error: playerError, search } = usePlayer();
   const { load, getState } = useCharacter();
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const langRef = useRef(i18n.language);
+  const searchLangRef = useRef(i18n.language);
+
+  useEffect(() => { langRef.current = i18n.language; });
+
+  const toggleExpanded = (id: string) =>
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const handleSearch = (name: string) => {
+    searchLangRef.current = i18n.language;
+    search(name);
+  };
+
+  const effectiveStatus = playerStatus !== 'loading' && i18n.language !== searchLangRef.current
+    ? 'idle'
+    : playerStatus;
 
   useEffect(() => {
-    if (profile) {
-      profile.characters.forEach((c) => load(profile.membershipId, c.characterId));
-    }
+    if (!profile) return;
+    profile.characters.forEach((c) => load(profile.membershipId, c.characterId, langRef.current));
   }, [profile, load]);
 
   return (
@@ -40,41 +50,41 @@ export default function CharacterPage() {
       <Navbar />
       <div style={styles.header}>
         <h1 style={styles.brand}>evoke's destiny</h1>
-        <SearchBar onSearch={search} loading={playerStatus === 'loading'} />
+        <SearchBar onSearch={handleSearch} loading={effectiveStatus === 'loading'} />
       </div>
       <div style={styles.main}>
         <h2 style={styles.pageTitle}>{t('character.pageTitle')}</h2>
-        {playerStatus === 'idle' && (
+        {effectiveStatus === 'idle' && (
           <p style={styles.hint}>{t('character.hint')}</p>
         )}
-        {playerStatus === 'loading' && (
+        {effectiveStatus === 'loading' && (
           <div style={styles.loadingWrapper}>
             <p style={styles.loadingText}>{t('common.loading')}</p>
             <img src={bungieLoadGif} width={160} alt="loading" />
           </div>
         )}
-        {playerStatus === 'error' && (
+        {effectiveStatus === 'error' && (
           <p style={styles.error}>{playerError}</p>
         )}
-        {playerStatus === 'success' && profile && (
+        {effectiveStatus === 'success' && profile && (
           <div>
             <PlayerHeader profile={profile} />
             {profile.characters.map((character) => {
-              const charState = getState(character.characterId);
+              const charState = getState(character.characterId, i18n.language);
+              const isExpanded = expandedIds.has(character.characterId);
               return (
                 <div key={character.characterId} style={styles.characterSection}>
-                  <CharacterCard character={character} />
-                  {charState.status === 'loading' && (
-                    <div style={styles.loadingWrapper}>
-                      <img src={bungieLoadGif} width={80} alt="loading" />
-                    </div>
-                  )}
-                  {charState.status === 'success' && charState.detail && (
+                  <CharacterCard
+                    character={character}
+                    isSelected={isExpanded}
+                    onClick={() => toggleExpanded(character.characterId)}
+                  />
+                  {isExpanded && charState.status === 'success' && charState.detail && (
                     <div style={styles.detailWrapper}>
-                      <StatTable character={charState.detail} />
+                      <InfoTable character={charState.detail} />
                       <div style={styles.statGrid}>
-                        {STAT_FIELDS.map(([label, key]) => (
-                          <StatCard key={key} label={label} value={charState.detail!.stats[key]} />
+                        {charState.detail.stats.map(({ name, value }) => (
+                          <StatCard key={name} label={name} value={value} />
                         ))}
                       </div>
                       {charState.detail.gear.length > 0 && (
@@ -82,7 +92,7 @@ export default function CharacterPage() {
                       )}
                     </div>
                   )}
-                  {charState.status === 'error' && (
+                  {isExpanded && charState.status === 'error' && (
                     <p style={styles.error}>{charState.error}</p>
                   )}
                 </div>

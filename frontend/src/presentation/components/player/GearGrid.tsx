@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { GearItem } from '@/domain/types/player';
 import { colors, spacing, fontSizes, font, surfaceStyle, radii } from '@/presentation/styles/tokens';
 
@@ -22,18 +23,19 @@ function GearSlot({ item }: GearSlotProps) {
 }
 
 export default function GearGrid({ gear }: Props) {
+  const { t } = useTranslation();
   const weapons = gear.slice(0, 3);
   const armor = gear.slice(3, 8);
 
   return (
     <div style={{ ...surfaceStyle, ...styles.wrapper }}>
-      <p style={styles.sectionLabel}>武器</p>
+      <p style={styles.sectionLabel}>{t('character.weapons')}</p>
       <div style={styles.row}>
         {weapons.map((item) => (
           <GearSlot key={item.itemHash} item={item} />
         ))}
       </div>
-      <p style={{ ...styles.sectionLabel, marginTop: spacing.md }}>防具</p>
+      <p style={{ ...styles.sectionLabel, marginTop: spacing.md }}>{t('character.armor')}</p>
       <div style={styles.row}>
         {armor.map((item) => (
           <GearSlot key={item.itemHash} item={item} />

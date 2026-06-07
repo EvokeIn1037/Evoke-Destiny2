@@ -9,6 +9,11 @@ class GearItem(BaseModel):
     light: int
 
 
+class StatEntry(BaseModel):
+    name: str
+    value: int
+
+
 class Character(BaseModel):
     characterId: str
     classType: int
@@ -22,7 +27,11 @@ class Character(BaseModel):
 
 
 class CharacterDetail(Character):
+    stats: list[StatEntry]  # overrides Character.stats with resolved names
     gear: list[GearItem]
+    race_name: str = ""
+    race_description: str = ""
+    class_name: str = ""
 
 
 class ClanInfo(BaseModel):

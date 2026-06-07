@@ -16,6 +16,19 @@ const t: Translation = {
   character: {
     pageTitle: 'Статистика',
     hint: 'Введите своё имя Bungie для начала',
+    weapons: 'Оружие',
+    armor: 'Броня',
+    classInfo: 'Класс',
+    description: 'Описание',
+    lastPlayed: 'Последний вход',
+    playTime: 'Время игры',
+    lightLevel: 'Уровень света',
+  },
+  clan: {
+    title: 'Инфо клана',
+    membersCount: '{{count}} участников',
+    motto: 'ДЕВИЗ: ',
+    about: 'О НАС: ',
   },
   search: {
     placeholder: 'Введите имя Bungie (напр. Страж#1234)',
@@ -33,6 +46,8 @@ const t: Translation = {
     error: 'Произошла ошибка',
     retry: 'Повторить',
     noData: 'Нет данных',
+    hour: 'ч',
+    minute: 'мин',
   },
 };
 

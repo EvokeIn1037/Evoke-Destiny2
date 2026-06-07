@@ -16,6 +16,19 @@ const t: Translation = {
   character: {
     pageTitle: 'Estadísticas',
     hint: 'Ingresa tu nombre Bungie para comenzar',
+    weapons: 'Armas',
+    armor: 'Armadura',
+    classInfo: 'Clase',
+    description: 'Descripción',
+    lastPlayed: 'Última vez jugado',
+    playTime: 'Tiempo jugado',
+    lightLevel: 'Nivel de luz',
+  },
+  clan: {
+    title: 'Info del clan',
+    membersCount: '{{count}} miembros',
+    motto: 'LEMA: ',
+    about: 'ACERCA DE: ',
   },
   search: {
     placeholder: 'Ingresa nombre Bungie (ej. Guardián#1234)',
@@ -33,6 +46,8 @@ const t: Translation = {
     error: 'Ocurrió un error',
     retry: 'Reintentar',
     noData: 'Sin datos disponibles',
+    hour: 'h',
+    minute: 'min',
   },
 };
 

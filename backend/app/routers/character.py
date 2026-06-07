@@ -2,7 +2,7 @@ import asyncio
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.models.player import Character, CharacterDetail, GearItem
+from app.models.player import CharacterDetail, GearItem, StatEntry
 from app.services import bungie, manifest
 
 router = APIRouter()
@@ -52,7 +52,7 @@ async def get_character(
     membership_id: str,
     character_id: str,
     membership_type: int = Query(default=3),
-    lang: str = Query(default="en"),
+    lang: str = Query(...),
 ):
     resp = await bungie.get(
         f"/Destiny2/{membership_type}/Profile/{membership_id}/Character/{character_id}/",
@@ -67,21 +67,37 @@ async def get_character(
     equip_items = response.get("equipment", {}).get("data", {}).get("items", [])
     instances = response.get("itemComponents", {}).get("instances", {}).get("data", {})
 
-    character = Character(
+    gender_type = char_data.get("genderType", 0)
+    race_type = char_data.get("raceType", 0)
+    class_type = char_data.get("classType", 0)
+    raw_stats = {str(k): int(v) for k, v in char_data.get("stats", {}).items()}
+    stat_hashes = list(raw_stats.keys())
+
+    stat_names, gear_results, race_info, class_name = await asyncio.gather(
+        asyncio.gather(*(manifest.get_stat_display(int(h), lang) for h in stat_hashes)),
+        asyncio.gather(*(_build_gear_item(item, instances, lang) for item in equip_items)),
+        manifest.get_race_info(race_type, gender_type, lang),
+        manifest.get_class_name(class_type, gender_type, lang),
+    )
+
+    stats = [StatEntry(name=n or h, value=raw_stats[h]) for h, n in zip(stat_hashes, stat_names)]
+    gear = [g for g in gear_results if g is not None]
+    race_name, race_desc = race_info
+    if race_type == 0:
+        race_desc = ""
+
+    return CharacterDetail(
         characterId=character_id,
-        classType=char_data.get("classType", 0),
-        raceType=char_data.get("raceType", 0),
-        genderType=char_data.get("genderType", 0),
+        classType=class_type,
+        raceType=race_type,
+        genderType=gender_type,
         light=char_data.get("light", 0),
         emblemBackgroundPath=char_data.get("emblemBackgroundPath", ""),
         dateLastPlayed=char_data.get("dateLastPlayed", ""),
         minutesPlayedTotal=int(char_data.get("minutesPlayedTotal", 0)),
-        stats={str(k): int(v) for k, v in char_data.get("stats", {}).items()},
+        stats=stats,
+        gear=gear,
+        race_name=race_name,
+        race_description=race_desc,
+        class_name=class_name,
     )
-
-    gear_results = await asyncio.gather(
-        *(_build_gear_item(item, instances, lang) for item in equip_items)
-    )
-    gear = [g for g in gear_results if g is not None]
-
-    return CharacterDetail(**character.model_dump(), gear=gear)

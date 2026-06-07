@@ -20,7 +20,7 @@ SUPPORTED_LOCALES = ["en", "fr", "es", "es-mx", "de", "it", "ja", "pt-br", "ru",
 def get_manifest_db_path(lang: str = "en") -> str:
     if lang not in SUPPORTED_LOCALES:
         raise ValueError(f"Unsupported locale: {lang}")
-    path = f"./app/db/world_sql_content_{lang}.sqlite"
+    path = f"./app/db/manifest_{lang}.db"
     if not os.path.exists(path):
-        return "./app/db/world_sql_content_en.sqlite"
+        return "./app/db/manifest_en.db"
     return path
