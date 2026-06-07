@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlayer } from '@/data/providers/player.provider';
 import { useCharacter } from '@/data/providers/character.provider';
@@ -19,6 +19,10 @@ export default function CharacterPage() {
   const { status: playerStatus, profile, error: playerError, search } = usePlayer();
   const { load, getState } = useCharacter();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const lastQuery = useRef('');
+  const langRef = useRef(i18n.language);
+
+  useEffect(() => { langRef.current = i18n.language; });
 
   const toggleExpanded = (id: string) =>
     setExpandedIds(prev => {
@@ -27,18 +31,27 @@ export default function CharacterPage() {
       return next;
     });
 
+  const handleSearch = (name: string) => {
+    lastQuery.current = name;
+    search(name);
+  };
+
   useEffect(() => {
-    if (profile) {
-      profile.characters.forEach((c) => load(profile.membershipId, c.characterId, i18n.language));
-    }
-  }, [profile, load, i18n.language]);
+    if (lastQuery.current) search(lastQuery.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i18n.language]);
+
+  useEffect(() => {
+    if (!profile) return;
+    profile.characters.forEach((c) => load(profile.membershipId, c.characterId, langRef.current));
+  }, [profile, load]);
 
   return (
     <div style={styles.page}>
       <Navbar />
       <div style={styles.header}>
         <h1 style={styles.brand}>evoke's destiny</h1>
-        <SearchBar onSearch={search} loading={playerStatus === 'loading'} />
+        <SearchBar onSearch={handleSearch} loading={playerStatus === 'loading'} />
       </div>
       <div style={styles.main}>
         <h2 style={styles.pageTitle}>{t('character.pageTitle')}</h2>
