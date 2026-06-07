@@ -13,7 +13,7 @@ export default function ClanInfo({ clan }: Props) {
 
   return (
     <div style={{ ...surfaceStyle, ...styles.wrapper }}>
-      <h3 style={styles.heading}>公会信息</h3>
+      <h3 style={styles.heading}>{t('clan.title')}</h3>
       <div style={styles.body}>
         <img src={bannerUrl} alt="clan banner" style={styles.banner} />
         <div style={styles.details}>
