@@ -26,7 +26,7 @@ export default function InfoTable({ character }: Props) {
 
   const rows: [string, React.ReactNode][] = [
     [t('character.classInfo'), <strong>{race_name} {class_name}</strong>],
-    [t('character.description'), race_description],
+    ...(race_description ? [[t('character.description'), race_description] as [string, React.ReactNode]] : []),
     [t('character.lastPlayed'), formatLastPlayed(dateLastPlayed)],
     [t('character.playTime'), formatPlayTime(minutesPlayedTotal, t('common.hour'), t('common.minute'))],
     [t('character.lightLevel'), light],

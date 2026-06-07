@@ -83,6 +83,8 @@ async def get_character(
     stats = [StatEntry(name=n or h, value=raw_stats[h]) for h, n in zip(stat_hashes, stat_names)]
     gear = [g for g in gear_results if g is not None]
     race_name, race_desc = race_info
+    if race_type == 0:
+        race_desc = ""
 
     return CharacterDetail(
         characterId=character_id,
