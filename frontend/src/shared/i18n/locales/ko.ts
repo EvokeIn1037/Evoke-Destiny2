@@ -9,6 +9,14 @@ const t: Translation = {
     hash: 'Hash 검색',
     brand: "evoke's destiny",
   },
+  home: {
+    title: "evoke's destiny finder",
+    subtitle: '캐릭터 데이터, 무기 통계 등 조회',
+  },
+  character: {
+    pageTitle: '플레이어 통계',
+    hint: 'Bungie 이름을 입력하여 시작하세요',
+  },
   search: {
     placeholder: 'Bungie 이름 입력 (예: 수호자#1234)',
     button: '검색',

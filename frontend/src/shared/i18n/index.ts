@@ -37,9 +37,14 @@ i18next
     },
     fallbackLng: 'en',
     detection: {
-      order: ['localStorage'],
-      lookupLocalStorage: 'destiny-lang',
-      caches: ['localStorage'],
+      order: ['navigator'],
+      caches: [],
+      convertDetectedLanguage: (lng: string) => {
+        const l = lng.toLowerCase();
+        if (l === 'zh-cn' || l === 'zh-hans' || l === 'zh-sg') return 'zh-chs';
+        if (l === 'zh-tw' || l === 'zh-hk' || l === 'zh-hant') return 'zh-cht';
+        return l;
+      },
     },
     interpolation: {
       escapeValue: false,

@@ -7,6 +7,14 @@ export interface Translation {
     hash: string;
     brand: string;
   };
+  home: {
+    title: string;
+    subtitle: string;
+  };
+  character: {
+    pageTitle: string;
+    hint: string;
+  };
   search: {
     placeholder: string;
     button: string;

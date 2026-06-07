@@ -9,6 +9,14 @@ const t: Translation = {
     hash: 'Hash Lookup',
     brand: "evoke's destiny",
   },
+  home: {
+    title: "evoke's destiny finder",
+    subtitle: 'Character data, weapon stats, and more',
+  },
+  character: {
+    pageTitle: 'Player Stats',
+    hint: 'Enter your Bungie name to get started',
+  },
   search: {
     placeholder: 'Enter Bungie name (e.g. Guardian#1234)',
     button: 'Search',

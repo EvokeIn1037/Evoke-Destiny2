@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, inputStyle, buttonStyle } from '@/presentation/styles/tokens';
 
 interface Props {
@@ -7,12 +8,10 @@ interface Props {
   loading?: boolean;
 }
 
-export default function SearchBar({
-  onSearch,
-  placeholder = 'Bungie昵称 (输入包括#后的内容)',
-  loading = false,
-}: Props) {
+export default function SearchBar({ onSearch, placeholder, loading = false }: Props) {
+  const { t } = useTranslation();
   const [value, setValue] = useState('');
+  const displayPlaceholder = placeholder ?? t('search.placeholder');
 
   const handleSubmit = () => {
     const trimmed = value.trim();
@@ -32,7 +31,7 @@ export default function SearchBar({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && !loading && handleSubmit()}
-        placeholder={placeholder}
+        placeholder={displayPlaceholder}
         disabled={loading}
       />
       <button
@@ -43,7 +42,7 @@ export default function SearchBar({
         onClick={handleSubmit}
         disabled={loading}
       >
-        {loading ? '查询中...' : '确认'}
+        {loading ? t('search.loading') : t('search.button')}
       </button>
     </div>
   );
