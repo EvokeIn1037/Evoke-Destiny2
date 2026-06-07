@@ -6,7 +6,6 @@
     "allow": [
       "mcp__playwright",
       "mcp__playwright__*",
-      "mcp__playwright__browser_*",
       "Bash(npm run dev:web)",
       "Bash(npm run dev:web *)",
       "Bash(cat .dev-port)",

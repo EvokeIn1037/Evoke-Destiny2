@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
-"""Download the latest Bungie Destiny 2 manifest JSON and save to app/db/manifest.db.
+"""Download the latest Bungie Destiny 2 manifest SQLite database.
 
 Run from the backend/ directory:
     python scripts/update_manifest.py [locale]
 
 Locale options: en, fr, es, es-mx, de, it, ja, pt-br, ru, pl, ko, zh-cht, zh-chs
-Defaults to zh-chs, falling back to en.
+Defaults to en.
 """
 
-import json
 import os
-import sqlite3
 import sys
+import tempfile
 import urllib.request
+import zipfile
+import json
 
 BUNGIE_ROOT = "https://www.bungie.net"
 MANIFEST_ENDPOINT = f"{BUNGIE_ROOT}/Platform/Destiny2/Manifest/"
-DB_PATH = "./app/db/manifest_{locale}.db"
+DB_DIR = "./app/db"
 SUPPORTED_LOCALES = ["en", "fr", "es", "es-mx", "de", "it", "ja", "pt-br", "ru", "pl", "ko", "zh-cht", "zh-chs"]
 
 
@@ -34,51 +35,20 @@ def _load_api_key() -> str:
     return ""
 
 
-def getDestinyContentPath(api_key: str, locale: str = "zh-chs") -> str:
-    """Fetch Bungie manifest and return the jsonWorldContentPaths entry for the given locale."""
+def _get_mobile_content_path(api_key: str, locale: str) -> str:
     req = urllib.request.Request(MANIFEST_ENDPOINT, headers={"X-API-Key": api_key})
     with urllib.request.urlopen(req) as resp:
         data = json.loads(resp.read())
 
-    content_paths = data["Response"]["jsonWorldContentPaths"]
+    content_paths = data["Response"]["mobileWorldContentPaths"]
     path = content_paths.get(locale) or content_paths.get("en")
     if not path:
-        raise SystemExit(f"No content path found for locale '{locale}' or fallback 'en'")
+        raise SystemExit(f"No mobile content path found for locale '{locale}' or fallback 'en'")
     return path
 
 
-def _hash_to_id(hash_str: str) -> int:
-    id_ = int(hash_str)
-    if id_ & (1 << 31):
-        id_ -= 1 << 32
-    return id_
-
-
-def _build_db(content: dict, db_path: str) -> None:
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    con = sqlite3.connect(db_path)
-    try:
-        for table_name, definitions in content.items():
-            if not isinstance(definitions, dict):
-                continue
-            con.execute(f"DROP TABLE IF EXISTS {table_name}")
-            con.execute(
-                f"CREATE TABLE {table_name} (id INTEGER PRIMARY KEY, json TEXT NOT NULL)"
-            )
-            rows = [
-                (_hash_to_id(hash_str), json.dumps(entry, ensure_ascii=False))
-                for hash_str, entry in definitions.items()
-            ]
-            con.executemany(
-                f"INSERT INTO {table_name} (id, json) VALUES (?, ?)", rows
-            )
-        con.commit()
-    finally:
-        con.close()
-
-
 def main() -> None:
-    locale = sys.argv[1] if len(sys.argv) > 1 else "zh-chs"
+    locale = sys.argv[1] if len(sys.argv) > 1 else "en"
     if locale not in SUPPORTED_LOCALES:
         raise SystemExit(
             f"Unsupported locale '{locale}'. Choose from: {', '.join(SUPPORTED_LOCALES)}"
@@ -89,18 +59,36 @@ def main() -> None:
         raise SystemExit("BUNGIE_API_KEY not set. Export it or add it to backend/.env")
 
     print(f"Fetching manifest metadata (locale: {locale})...")
-    json_path = getDestinyContentPath(api_key, locale)
-    url = f"{BUNGIE_ROOT}{json_path}"
+    content_path = _get_mobile_content_path(api_key, locale)
+    url = f"{BUNGIE_ROOT}{content_path}"
     print(f"Downloading {url} ...")
 
-    req = urllib.request.Request(url, headers={"X-API-Key": api_key})
-    with urllib.request.urlopen(req) as resp:
-        content = json.loads(resp.read())
+    os.makedirs(DB_DIR, exist_ok=True)
 
-    db_path = DB_PATH.format(locale=locale)
-    print("Building SQLite database...")
-    _build_db(content, db_path)
-    print(f"Manifest saved to {db_path}")
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        content_file = os.path.join(tmp_dir, "world_sql_content.content")
+        req = urllib.request.Request(url, headers={"X-API-Key": api_key})
+        with urllib.request.urlopen(req) as resp:
+            with open(content_file, "wb") as f:
+                f.write(resp.read())
+
+        zip_file = content_file.replace(".content", ".zip")
+        os.rename(content_file, zip_file)
+
+        print("Extracting...")
+        with zipfile.ZipFile(zip_file, "r") as zf:
+            names = zf.namelist()
+            if not names:
+                raise SystemExit("Zip archive is empty")
+            zf.extract(names[0], tmp_dir)
+            extracted = os.path.join(tmp_dir, names[0])
+
+        dest = os.path.join(DB_DIR, f"world_sql_content_{locale}.sqlite")
+        if os.path.exists(dest):
+            os.remove(dest)
+        os.rename(extracted, dest)
+
+    print(f"Manifest saved to {dest}")
 
 
 if __name__ == "__main__":

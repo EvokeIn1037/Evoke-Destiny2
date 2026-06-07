@@ -1,6 +1,8 @@
 import asyncio
 import json
 import sqlite3
+from contextlib import contextmanager
+from typing import Generator
 
 from app.config import get_manifest_db_path
 
@@ -12,18 +14,30 @@ def _hash_to_id(hash_value: int) -> int:
     return id_
 
 
-def _query(table: str, hash_value: int, lang: str = "en") -> dict | None:
+@contextmanager
+def _open_db(lang: str) -> Generator[sqlite3.Connection, None, None]:
+    con = sqlite3.connect(get_manifest_db_path(lang), check_same_thread=False)
+    try:
+        yield con
+    finally:
+        con.close()
+
+
+def _query_con(con: sqlite3.Connection, table: str, hash_value: int) -> dict | None:
     id_ = _hash_to_id(hash_value)
     try:
-        con = sqlite3.connect(get_manifest_db_path(lang))
         cur = con.execute(f"SELECT json FROM {table} WHERE id = ?", (id_,))  # noqa: S608
         row = cur.fetchone()
-        con.close()
         if not row:
             return None
         return json.loads(row[0])
-    except Exception:
+    except sqlite3.OperationalError:
         return None
+
+
+def _query(table: str, hash_value: int, lang: str = "en") -> dict | None:
+    with _open_db(lang) as con:
+        return _query_con(con, table, hash_value)
 
 
 async def get_activity_name(hash_value: int, lang: str = "en") -> str:
@@ -57,14 +71,15 @@ HASH_LOOKUP_TABLES = [
 
 
 def _lookup_hash(hash_value: int, lang: str) -> dict | None:
-    for table in HASH_LOOKUP_TABLES:
-        data = _query(table, hash_value, lang)
-        if not data:
-            continue
-        props = data.get("displayProperties", {})
-        name = props.get("name", "")
-        if name:
-            return {"name": name, "iconPath": props.get("icon", ""), "type": table}
+    with _open_db(lang) as con:
+        for table in HASH_LOOKUP_TABLES:
+            data = _query_con(con, table, hash_value)
+            if not data:
+                continue
+            props = data.get("displayProperties", {})
+            name = props.get("name", "")
+            if name:
+                return {"name": name, "iconPath": props.get("icon", ""), "type": table}
     return None
 
 

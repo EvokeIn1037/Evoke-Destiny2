@@ -43,10 +43,11 @@ The original HTML pages (`index.html`, `character/`, `pvp/`, `raid/`) remain in 
 
 ## Coding principles
 
-- **Simple beats clever.** Ship the approach that solves the problem in front of us and reads well.
-- **Folder boundaries are semantic.** Each top-level folder owns a distinct layer; don't reach across layers without a clear reason.
-- **Strings are bugs.** Use existing types/constants for values referenced in more than one place — routes (`ROUTES`), PvP mode IDs (`PVP_MODES`), raid modes (`RAID_MODES`).
-- **Comments are bugs too.** Default to none. Only write a short comment when the why is genuinely non-obvious.
+- **Simple beats clever.** Ship the approach that solves the problem in front of us and reads well. Don't pre-build for hypothetical short-tail cases — the abstraction guessed at usually doesn't survive contact with the real second use.
+- **Build the seam when N≥2 is real.** When a second variant of something is already on the roadmap (another provider, another command type), put the abstraction in now. The provider and command patterns are paid-for examples.
+- **Folder boundaries are semantic.** `controller/` is glue, `engine/` isolates Babylon, `services/` is provider-shaped, `store/` is Zustand. New code goes in the layer it belongs to — don't smear logic across layers.
+- **Strings are bugs.** Use enums/types for anything referenced in more than one place — routes (`ROUTES`), PvP mode IDs (`PVP_MODES`), raid modes (`RAID_MODES`).
+- **Comments are bugs too.** Default to none. Well-named identifiers should carry the _what_; only write a comment when the _why_ is genuinely non-obvious (a hidden constraint, a workaround, a subtle invariant). Don't describe behavior the code already shows, don't narrate task history ("added for X", "fix from PR #N"), and don't write multi-line docstrings — one short line max. If removing the comment wouldn't confuse a future reader, don't write it.
 
 ## Running the app
 
@@ -59,18 +60,12 @@ The original HTML pages (`index.html`, `character/`, `pvp/`, `raid/`) remain in 
 
 **Backend (from `backend/`):**
 
-- Copy `.env.example` to `.env` and set `BUNGIE_API_KEY`
-- `python scripts/update_manifest.py` — download latest Destiny manifest to `app/db/manifest.db`
+- Create `backend/.env` with at minimum `BUNGIE_API_KEY=<your key>`. Optional overrides: `MANIFEST_DB_PATH`, `CORS_ORIGINS`, `BUNGIE_ROOT`.
+- Activate the venv: `source venv/bin/activate`
+- `python scripts/update_manifest.py [locale]` — download the Destiny manifest for the given locale (default: `zh-chs`, fallback: `en`). Saves to `app/db/manifest_{locale}.db`. Supported locales: `en fr es es-mx de it ja pt-br ru pl ko zh-cht zh-chs`.
 - `uvicorn app.main:app --reload` — FastAPI dev server at `localhost:8000`
 
-**Static assets** — copy before first run:
-
-```
-cp -r video/ frontend/public/video/
-cp -r img/   frontend/public/img/
-```
-
-**Environment** — copy `.env.example` to `.env` in `frontend/` and set `VITE_API_BASE_URL`.
+**Environment** — create `frontend/.env` and set `VITE_API_BASE_URL=http://localhost:8000`.
 
 ## Verification
 
