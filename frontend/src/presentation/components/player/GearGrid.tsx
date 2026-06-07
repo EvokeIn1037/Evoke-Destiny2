@@ -12,10 +12,14 @@ interface GearSlotProps {
 }
 
 function GearSlot({ item }: GearSlotProps) {
+  const { i18n } = useTranslation();
   const iconUrl = `https://www.bungie.net${item.iconPath}`;
+  const lightGgUrl = `https://www.light.gg/db/${i18n.language}/items/${item.itemHash}/`;
   return (
     <div style={styles.slot}>
-      <img src={iconUrl} alt={item.name} style={styles.icon} />
+      <a href={lightGgUrl} target="_blank" rel="noreferrer">
+        <img src={iconUrl} alt={item.name} style={styles.icon} />
+      </a>
       <p style={styles.itemName}>{item.name}</p>
       <p style={styles.itemLight}>{item.light}</p>
     </div>
