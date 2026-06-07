@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import shutil
 import sqlite3
 import tempfile
 import urllib.request
@@ -66,9 +67,9 @@ def _download_db_sync(lang: str, api_key: str) -> None:
         data = json.loads(resp.read())
 
     content_paths = data["Response"]["mobileWorldContentPaths"]
-    content_path = content_paths.get(lang) or content_paths.get("en")
+    content_path = content_paths.get(lang)
     if not content_path:
-        raise RuntimeError(f"No manifest path for locale '{lang}'")
+        raise RuntimeError(f"No manifest path for locale '{lang}' in Bungie API response")
 
     os.makedirs(_DB_DIR, exist_ok=True)
 
@@ -95,7 +96,7 @@ def _download_db_sync(lang: str, api_key: str) -> None:
         dest = os.path.join(_DB_DIR, f"manifest_{lang}.db")
         if os.path.exists(dest):
             os.remove(dest)
-        os.rename(extracted, dest)
+        shutil.move(extracted, dest)
 
 
 async def _ensure_db(lang: str) -> str:
@@ -125,7 +126,9 @@ async def _ensure_db(lang: str) -> str:
         state.timestamp = datetime.now(timezone.utc)
         return lang
     except Exception:
-        return lang if os.path.exists(db_path) else "en"
+        if os.path.exists(db_path):
+            return lang  # use stale DB rather than failing
+        raise
     finally:
         state.updating = False
         state.event.set()
